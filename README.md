@@ -78,6 +78,59 @@ OpportunityScanner → PriceOracle → DexInterface → FlashLoanCalculator → 
 
 Each layer is optimized for the needs of the layer above it.
 
+## 📁 Project Structure
+
+```
+shango_poly/
+├── src/
+│   ├── bot/              # Core bot logic
+│   │   ├── ArbitrageBot.js       # Main orchestrator
+│   │   ├── FlashLoanExecutor.js  # Layer 7: Execution
+│   │   ├── FlashLoanCalculator.js # Layer 4: Calculation
+│   │   └── OpportunityScanner.js # Layer 1: Data fetch
+│   ├── dex/              # DEX integrations
+│   │   ├── DexInterface.js       # Layer 3: Routing
+│   │   ├── QuickSwapDex.js
+│   │   └── SushiSwapDex.js
+│   ├── oracle/           # Price oracles
+│   │   └── PriceOracle.js        # Layer 2: Price aggregation
+│   └── utils/            # Utilities
+│       └── logger.js
+├── config/               # Configuration
+│   ├── index.js
+│   ├── tokens.js
+│   ├── dexes.js
+│   └── contracts.js
+├── contracts/            # Solidity contracts
+│   └── FlashLoanArbitrage.sol
+├── scripts/              # Utility scripts
+│   ├── test-connection.js
+│   └── test-architecture.js
+├── docs/                 # Documentation
+│   ├── SETUP.md
+│   ├── CONFIGURATION.md
+│   └── TROUBLESHOOTING.md
+└── index.js              # Entry point
+```
+
+## 🧪 Testing
+
+### Test Architecture
+```bash
+node scripts/test-architecture.js
+```
+
+### Test Connection
+```bash
+node scripts/test-connection.js
+```
+
+### Run in Simulation Mode
+```bash
+# Without deployed contract, bot runs in simulation mode
+node index.js
+```
+
 ## ⚠️ Disclaimer
 
 This software is for educational purposes. Trading involves risk.
