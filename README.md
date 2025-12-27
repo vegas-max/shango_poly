@@ -78,6 +78,8 @@ OpportunityScanner → PriceOracle → DexInterface → FlashLoanCalculator → 
 
 Each layer is optimized for the needs of the layer above it.
 
+**See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture documentation.**
+
 ## 📁 Project Structure
 
 ```
