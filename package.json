@@ -1,0 +1,32 @@
+{
+  "name": "shango-poly",
+  "version": "1.0.0",
+  "description": "Advanced MEV arbitrage bot for Polygon network with backward data flow architecture",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "arbitrage",
+    "polygon",
+    "defi",
+    "mev",
+    "flash-loans",
+    "trading-bot"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "ethers": "^5.7.2",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
