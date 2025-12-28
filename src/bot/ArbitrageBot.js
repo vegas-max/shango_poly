@@ -13,6 +13,14 @@ class ArbitrageBot {
     this.dexInterface = null;
     this.priceOracle = null;
     this.isRunning = false;
+    this.opportunities = [];
+    this.executionStats = {
+      scanned: 0,
+      detected: 0,
+      validated: 0,
+      executed: 0,
+      failed: 0
+    };
   }
 
   /**
@@ -81,6 +89,7 @@ class ArbitrageBot {
    */
   async handleOpportunity(opportunity) {
     logger.info('Processing opportunity', { opportunity });
+    this.executionStats.detected++;
 
     try {
       // LAYER 1: Validate opportunity (DATA FETCH layer confirms)
@@ -89,6 +98,7 @@ class ArbitrageBot {
         logger.info('Opportunity invalid', { reason: validation.reason });
         return;
       }
+      this.executionStats.validated++;
 
       // LAYER 4: Calculate optimal flash loan (CALCULATION)
       const loanDetails = await this.calculator.calculateOptimalLoan(
@@ -134,11 +144,20 @@ class ArbitrageBot {
           hash: result.hash,
           gasUsed: result.gasUsed.toString()
         });
+        this.executionStats.executed++;
+        this.opportunities.push({
+          ...opportunity,
+          timestamp: Date.now(),
+          bot: 'Shango Poly',
+          result
+        });
       } else {
         logger.error('Arbitrage execution failed', { error: result.error });
+        this.executionStats.failed++;
       }
     } catch (error) {
       logger.error('Error handling opportunity', { error: error.message });
+      this.executionStats.failed++;
     }
   }
 
@@ -160,6 +179,40 @@ class ArbitrageBot {
     );
 
     return adjustedPrice.gt(maxGasPrice) ? maxGasPrice : adjustedPrice;
+  }
+
+  /**
+   * Get execution statistics
+   */
+  getStats() {
+    return {
+      ...this.executionStats,
+      opportunities: this.opportunities.length,
+      successRate: this.executionStats.validated > 0 
+        ? (this.executionStats.executed / this.executionStats.validated) * 100 
+        : 0
+    };
+  }
+
+  /**
+   * Reset statistics
+   */
+  resetStats() {
+    this.executionStats = {
+      scanned: 0,
+      detected: 0,
+      validated: 0,
+      executed: 0,
+      failed: 0
+    };
+    this.opportunities = [];
+  }
+
+  /**
+   * Increment scan counter
+   */
+  incrementScanCount() {
+    this.executionStats.scanned++;
   }
 }
 

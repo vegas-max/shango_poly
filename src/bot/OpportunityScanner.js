@@ -22,6 +22,11 @@ class OpportunityScanner {
       try {
         const opportunities = await this.scan();
         
+        // Notify parent bot of scan completion
+        if (onOpportunity.bot && onOpportunity.bot.incrementScanCount) {
+          onOpportunity.bot.incrementScanCount();
+        }
+        
         for (const opp of opportunities) {
           if (opp.profitBps >= this.config.minProfitBps) {
             logger.info('Opportunity found', {
