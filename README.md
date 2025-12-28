@@ -117,6 +117,13 @@ shango_poly/
 
 ## 🧪 Testing
 
+### Run Bot Competition (Shango Poly vs TITAN 2.0)
+```bash
+npm run compete
+```
+
+Runs a 30-round competition between Shango Poly and TITAN 2.0 to determine which bot is more effective for production. See [docs/COMPETITION.md](docs/COMPETITION.md) for details.
+
 ### Test Architecture
 ```bash
 node scripts/test-architecture.js
