@@ -59,7 +59,8 @@ impl TurboScanner {
             // In lightweight mode, limit cache size to save memory
             if lightweight && seen.len() > 1000 {
                 // Evict approximately half of the entries
-                // Collect into vec first for deterministic eviction
+                // Note: HashSet iteration order is non-deterministic, but this is acceptable
+                // for a cache eviction strategy where we prioritize speed over determinism
                 let target_len = seen.len() / 2;
                 let keys_to_keep: Vec<String> = seen.iter().take(target_len).cloned().collect();
                 seen.clear();

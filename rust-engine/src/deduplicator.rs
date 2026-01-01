@@ -66,6 +66,8 @@ impl Deduplicator {
         if seen.len() >= self.max_size {
             if is_lightweight_mode() {
                 // Keep only 25% of entries (75% memory reduction)
+                // Note: HashSet iteration order is non-deterministic, but this is acceptable
+                // for a cache eviction strategy where we prioritize speed over determinism
                 let keep_size = self.max_size / 4;
                 let keys_to_keep: Vec<String> = seen.iter().take(keep_size).cloned().collect();
                 seen.clear();
@@ -98,6 +100,24 @@ impl Deduplicator {
             if is_dup {
                 stats.duplicates_found += 1;
             } else {
+                // Check if cache needs eviction before adding
+                if seen.len() >= self.max_size {
+                    if is_lightweight_mode() {
+                        // Keep only 25% of entries (75% memory reduction)
+                        let keep_size = self.max_size / 4;
+                        let keys_to_keep: Vec<String> = seen.iter().take(keep_size).cloned().collect();
+                        seen.clear();
+                        seen.extend(keys_to_keep);
+                        stats.cache_clears += 1;
+                    } else {
+                        // Clear 50% in normal mode
+                        let keep_size = self.max_size / 2;
+                        let keys_to_keep: Vec<String> = seen.iter().take(keep_size).cloned().collect();
+                        seen.clear();
+                        seen.extend(keys_to_keep);
+                        stats.cache_clears += 1;
+                    }
+                }
                 seen.insert(key);
             }
             results.push(is_dup);
