@@ -10,3 +10,10 @@ coverage/
 .idea/
 package-lock.json
 competition-results.json
+
+# Rust build artifacts
+rust-engine/target/
+rust-engine/Cargo.lock
+rust-engine/*.node
+rust-engine/index.js
+rust-engine/index.d.ts
