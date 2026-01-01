@@ -15,9 +15,6 @@ ahash = "0.8"  # Faster hashing for deduplication
 parking_lot = "0.12"  # Faster locks
 once_cell = "1.19"
 
-[build-dependencies]
-napi-build = "2"
-
 [profile.release]
 opt-level = 3
 lto = true  # Link Time Optimization for better ARM performance
