@@ -8,6 +8,10 @@ use std::sync::Arc;
 use crate::is_lightweight_mode;
 
 /// High-performance deduplicator optimized for ARM
+/// 
+/// Note: The max_size is determined at construction based on the current
+/// lightweight mode setting. The mode should be set via `set_lightweight_mode()`
+/// before creating any Deduplicator instances to ensure consistent cache limits.
 #[napi]
 pub struct Deduplicator {
     seen_items: Arc<RwLock<AHashSet<String>>>,
@@ -85,11 +89,15 @@ impl Deduplicator {
     #[napi]
     pub fn check_batch(&self, keys: Vec<String>) -> Vec<bool> {
         let mut seen = self.seen_items.write();
+        let mut stats = self.stats.write();
         let mut results = Vec::with_capacity(keys.len());
 
         for key in keys {
+            stats.total_checked += 1;
             let is_dup = seen.contains(&key);
-            if !is_dup {
+            if is_dup {
+                stats.duplicates_found += 1;
+            } else {
                 seen.insert(key);
             }
             results.push(is_dup);
@@ -102,7 +110,7 @@ impl Deduplicator {
     pub fn get_stats(&self) -> DedupResult {
         let stats = self.stats.read();
         DedupResult {
-            is_duplicate: false,
+            is_duplicate: stats.duplicates_found > 0,
             total_checked: stats.total_checked as f64,
             duplicates_found: stats.duplicates_found as f64,
         }

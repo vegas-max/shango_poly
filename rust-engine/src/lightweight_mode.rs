@@ -1,5 +1,9 @@
 // Lightweight Mode Configuration
 // Provides 75% memory reduction and 3x speed improvement
+//
+// Note: The following functions are primarily used for testing and provide
+// a structured configuration API. The main codebase uses the simpler
+// `is_lightweight_mode()` function from lib.rs for direct mode checking.
 
 use napi_derive::napi;
 
@@ -25,6 +29,9 @@ impl Default for LightweightConfig {
     }
 }
 
+/// Creates a lightweight configuration object with the specified mode.
+/// This is primarily used for testing and provides a structured way to
+/// configure lightweight mode settings.
 #[napi]
 pub fn create_lightweight_config(enabled: bool) -> LightweightConfig {
     if enabled {
@@ -46,6 +53,8 @@ pub fn create_lightweight_config(enabled: bool) -> LightweightConfig {
     }
 }
 
+/// Calculates the maximum cache size based on configuration.
+/// Used for testing and validation of cache size calculations.
 #[napi]
 pub fn get_max_cache_size(config: LightweightConfig, base_size: u32) -> u32 {
     if config.enabled {
@@ -55,6 +64,8 @@ pub fn get_max_cache_size(config: LightweightConfig, base_size: u32) -> u32 {
     }
 }
 
+/// Calculates the scan interval based on configuration.
+/// Used for testing and validation of speed multiplier calculations.
 #[napi]
 pub fn get_scan_interval(config: LightweightConfig, base_interval_ms: f64) -> f64 {
     if config.enabled {
@@ -64,6 +75,8 @@ pub fn get_scan_interval(config: LightweightConfig, base_interval_ms: f64) -> f6
     }
 }
 
+/// Returns a human-readable description of the configuration.
+/// Used for logging and debugging purposes.
 #[napi]
 pub fn get_lightweight_description(config: LightweightConfig) -> String {
     if config.enabled {

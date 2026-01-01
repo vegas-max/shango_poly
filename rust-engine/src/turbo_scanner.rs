@@ -58,7 +58,13 @@ impl TurboScanner {
 
             // In lightweight mode, limit cache size to save memory
             if lightweight && seen.len() > 1000 {
-                seen.clear();
+                // Evict approximately half of the entries instead of clearing all
+                let target_len = seen.len() / 2;
+                let mut kept = 0usize;
+                seen.retain(|_| {
+                    kept += 1;
+                    kept > target_len
+                });
             }
 
             seen.insert(key);

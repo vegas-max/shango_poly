@@ -61,7 +61,7 @@ cargo test
 ## 🔧 ARM Architecture Optimizations
 
 1. **LTO (Link Time Optimization)**: Enabled for better cross-crate optimization
-2. **target-cpu=native**: Optimizes for the specific ARM CPU
+2. **target-cpu=native**: Optimizes for the specific CPU when building natively on ARM (for cross-compiling to ARM from another architecture, use an explicit target CPU instead of `native`)
 3. **ahash**: 50% faster hashing on ARM vs. default hasher
 4. **parking_lot**: 2-5x faster locks than std::sync
 5. **Memory alignment**: Optimized for ARM cache lines
@@ -92,7 +92,7 @@ const aggregated = manager.aggregatePrices(prices);
 - No unsafe code blocks
 - Thread-safe with parking_lot::RwLock
 - Memory-safe with Rust's ownership system
-- No heap allocations in hot paths
+- Minimizes heap allocations in hot paths
 
 ## 📝 License
 
