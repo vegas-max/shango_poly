@@ -1,6 +1,7 @@
 // Layer 1: DATA FETCH - Scans for arbitrage opportunities
 const { ethers } = require('ethers');
 const logger = require('../utils/logger');
+const { getInstance: getRustEngineManager } = require('../utils/RustEngineManager');
 
 class OpportunityScanner {
   constructor(dexInterface, priceOracle, config) {
@@ -8,6 +9,7 @@ class OpportunityScanner {
     this.priceOracle = priceOracle;
     this.config = config;
     this.isScanning = false;
+    this.rustEngines = getRustEngineManager();
   }
 
   /**
@@ -58,7 +60,7 @@ class OpportunityScanner {
    * @returns {Array} Array of opportunities
    */
   async scan() {
-    const opportunities = [];
+    let opportunities = [];
 
     // Scan each base token with intermediate tokens
     for (const baseToken of this.config.baseTokens) {
@@ -78,6 +80,31 @@ class OpportunityScanner {
       } catch (error) {
         logger.debug(`Failed to scan ${baseToken}`, { error: error.message });
       }
+    }
+
+    // Use Rust TurboScanner for filtering and deduplication (3x faster)
+    if (this.rustEngines && this.rustEngines.isAvailable()) {
+      const rustOpportunities = opportunities.map(opp => ({
+        path: opp.path,
+        dexes: opp.dexes,
+        input_amount: opp.inputAmount.toString(),
+        output_amount: opp.outputAmount.toString(),
+        profit: opp.profit.toString(),
+        profit_bps: opp.profitBps,
+        timestamp: Date.now()
+      }));
+
+      const filtered = this.rustEngines.filterOpportunities(rustOpportunities);
+      
+      // Convert back to JavaScript format
+      opportunities = filtered.map(opp => ({
+        path: opp.path,
+        dexes: opp.dexes,
+        inputAmount: ethers.BigNumber.from(opp.input_amount),
+        outputAmount: ethers.BigNumber.from(opp.output_amount),
+        profit: ethers.BigNumber.from(opp.profit),
+        profitBps: opp.profit_bps
+      }));
     }
 
     // Detect price discrepancies

@@ -1,12 +1,14 @@
 // Layer 2: PRICE AGGREGATION - Aggregates prices from multiple sources
 const { ethers } = require('ethers');
 const logger = require('../utils/logger');
+const { getInstance: getRustEngineManager } = require('../utils/RustEngineManager');
 
 class PriceOracle {
   constructor(provider) {
     this.provider = provider;
     this.priceCache = new Map();
     this.cacheTimeout = 10000; // 10 seconds
+    this.rustEngines = getRustEngineManager();
   }
 
   /**
@@ -77,6 +79,27 @@ class PriceOracle {
       return prices[0];
     }
 
+    // Try using Rust engine for median calculation (ARM-optimized)
+    if (this.rustEngines && this.rustEngines.isAvailable()) {
+      const rustPrices = prices.map(p => ({
+        token_a: 'A',
+        token_b: 'B',
+        price: p.price.toString(),
+        source: p.source,
+        timestamp: p.timestamp
+      }));
+      
+      const median = this.rustEngines.calculateMedianPrice(rustPrices);
+      if (median) {
+        return {
+          source: median.source,
+          price: ethers.BigNumber.from(median.price),
+          timestamp: median.timestamp
+        };
+      }
+    }
+
+    // Fallback to JavaScript implementation
     // Use median for robustness against outliers
     const sorted = prices.slice().sort((a, b) => {
       if (a.price.gt(b.price)) return 1;

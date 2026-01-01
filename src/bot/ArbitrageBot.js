@@ -3,6 +3,7 @@ const FlashLoanExecutor = require('./FlashLoanExecutor');
 const FlashLoanCalculator = require('./FlashLoanCalculator');
 const OpportunityScanner = require('./OpportunityScanner');
 const logger = require('../utils/logger');
+const { getInstance: getRustEngineManager } = require('../utils/RustEngineManager');
 
 class ArbitrageBot {
   constructor(config) {
@@ -12,6 +13,7 @@ class ArbitrageBot {
     this.scanner = null;
     this.dexInterface = null;
     this.priceOracle = null;
+    this.rustEngines = null;
     this.isRunning = false;
     this.opportunities = [];
     this.executionStats = {
@@ -28,6 +30,17 @@ class ArbitrageBot {
    */
   async initialize(provider, dexInterface, priceOracle, aaveProvider) {
     logger.info('Initializing ArbitrageBot with backward architecture');
+
+    // Initialize Rust Twin Turbo Engines
+    this.rustEngines = getRustEngineManager();
+    const rustEnabled = await this.rustEngines.initialize({
+      minProfitBps: this.config.minProfitBps,
+      lightweight: process.env.LIGHTWEIGHT_MODE === 'true'
+    });
+
+    if (rustEnabled) {
+      logger.info('🦀 Twin Turbo Rust Engines active!');
+    }
 
     // Layer 7: EXECUTION
     this.executor = new FlashLoanExecutor(
@@ -92,6 +105,15 @@ class ArbitrageBot {
     this.executionStats.detected++;
 
     try {
+      // Use Rust engine for duplicate detection if available
+      if (this.rustEngines && this.rustEngines.isAvailable()) {
+        const oppKey = `${opportunity.path.join('-')}|${opportunity.dexes.join('-')}`;
+        if (this.rustEngines.checkDuplicate(oppKey)) {
+          logger.debug('Duplicate opportunity filtered by Rust engine');
+          return;
+        }
+      }
+
       // LAYER 1: Validate opportunity (DATA FETCH layer confirms)
       const validation = await this.scanner.validateOpportunity(opportunity);
       if (!validation.valid) {
@@ -185,13 +207,20 @@ class ArbitrageBot {
    * Get execution statistics
    */
   getStats() {
-    return {
+    const baseStats = {
       ...this.executionStats,
       opportunities: this.opportunities.length,
       successRate: this.executionStats.validated > 0 
         ? (this.executionStats.executed / this.executionStats.validated) * 100 
         : 0
     };
+
+    // Add Rust engine stats if available
+    if (this.rustEngines && this.rustEngines.isAvailable()) {
+      baseStats.rustEngines = this.rustEngines.getStats();
+    }
+
+    return baseStats;
   }
 
   /**
