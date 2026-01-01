@@ -63,7 +63,7 @@ impl TurboScanner {
                 let mut kept = 0usize;
                 seen.retain(|_| {
                     kept += 1;
-                    kept > target_len
+                    kept <= target_len
                 });
             }
 
