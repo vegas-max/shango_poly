@@ -58,13 +58,12 @@ impl TurboScanner {
 
             // In lightweight mode, limit cache size to save memory
             if lightweight && seen.len() > 1000 {
-                // Evict approximately half of the entries instead of clearing all
+                // Evict approximately half of the entries
+                // Collect into vec first for deterministic eviction
                 let target_len = seen.len() / 2;
-                let mut kept = 0usize;
-                seen.retain(|_| {
-                    kept += 1;
-                    kept <= target_len
-                });
+                let keys_to_keep: Vec<String> = seen.iter().take(target_len).cloned().collect();
+                seen.clear();
+                seen.extend(keys_to_keep);
             }
 
             seen.insert(key);
