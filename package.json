@@ -7,7 +7,9 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "echo \"No tests yet\" && exit 0",
-    "compete": "node scripts/bot-competition.js"
+    "compete": "node scripts/bot-competition.js",
+    "build:rust": "cd rust-engine && cargo build --release",
+    "test:rust": "cd rust-engine && cargo test"
   },
   "keywords": [
     "arbitrage",

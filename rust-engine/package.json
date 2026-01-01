@@ -1,0 +1,41 @@
+{
+  "name": "@shango-poly/rust-engine",
+  "version": "1.0.0",
+  "description": "High-performance Rust engines for Shango Poly - ARM optimized",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "prepublishOnly": "napi prepublish -t npm",
+    "test": "cargo test",
+    "artifacts": "napi artifacts"
+  },
+  "napi": {
+    "name": "rust-engine",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "aarch64-unknown-linux-gnu",
+        "armv7-unknown-linux-gnueabihf",
+        "x86_64-unknown-linux-gnu",
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin"
+      ]
+    }
+  },
+  "keywords": [
+    "rust",
+    "napi",
+    "arm",
+    "performance",
+    "arbitrage"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@napi-rs/cli": "^2.16.0"
+  },
+  "engines": {
+    "node": ">= 16"
+  }
+}
