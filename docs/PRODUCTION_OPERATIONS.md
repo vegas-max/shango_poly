@@ -154,7 +154,7 @@ This document provides a comprehensive end-to-end flow diagram of Shango Poly's 
 │ ┌──────────────────────────────────────────────────────────────────────────┐    │
 │ │ Polygon Network                                                           │    │
 │ │  • Transaction enters mempool                                            │    │
-│ │  • Miner/Validator selects transaction based on gas price                │    │
+│ │  • Validator selects transaction based on gas price                      │    │
 │ │  • Transaction included in block                                         │    │
 │ │  • Block propagated across Polygon network                               │    │
 │ │  • Confirmations accumulate (typically wait for 1-3 blocks)              │    │
