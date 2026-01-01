@@ -87,10 +87,10 @@ class OpportunityScanner {
       const rustOpportunities = opportunities.map(opp => ({
         path: opp.path,
         dexes: opp.dexes,
-        input_amount: opp.inputAmount.toString(),
-        output_amount: opp.outputAmount.toString(),
+        inputAmount: opp.inputAmount.toString(),
+        outputAmount: opp.outputAmount.toString(),
         profit: opp.profit.toString(),
-        profit_bps: opp.profitBps,
+        profitBps: opp.profitBps,
         timestamp: Date.now()
       }));
 
@@ -100,10 +100,10 @@ class OpportunityScanner {
       opportunities = filtered.map(opp => ({
         path: opp.path,
         dexes: opp.dexes,
-        inputAmount: ethers.BigNumber.from(opp.input_amount),
-        outputAmount: ethers.BigNumber.from(opp.output_amount),
+        inputAmount: ethers.BigNumber.from(opp.inputAmount),
+        outputAmount: ethers.BigNumber.from(opp.outputAmount),
         profit: ethers.BigNumber.from(opp.profit),
-        profitBps: opp.profit_bps
+        profitBps: opp.profitBps
       }));
     }
 

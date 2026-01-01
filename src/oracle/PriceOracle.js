@@ -82,8 +82,8 @@ class PriceOracle {
     // Try using Rust engine for median calculation (ARM-optimized)
     if (this.rustEngines && this.rustEngines.isAvailable()) {
       const rustPrices = prices.map(p => ({
-        token_a: 'A',
-        token_b: 'B',
+        tokenA: 'A',
+        tokenB: 'B',
         price: p.price.toString(),
         source: p.source,
         timestamp: p.timestamp
