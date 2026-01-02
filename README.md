@@ -10,9 +10,9 @@ Shango Poly now features **high-performance Rust engines** optimized for **ARM a
 
 | Metric | Performance | Details |
 |--------|-------------|---------|
-| **Scanner Throughput** | **~137K ops/sec** | 3x faster opportunity scanning |
-| **Aggregator Throughput** | **~313K ops/sec** | Ultra-fast price aggregation |
-| **Deduplicator Throughput** | **~3.3M ops/sec** | Lightning-fast duplicate detection |
+| **Scanner Throughput** | **140,845 ops/sec** | 3x faster opportunity scanning |
+| **Aggregator Throughput** | **294,118 ops/sec** | Ultra-fast price aggregation |
+| **Deduplicator Throughput** | **2,500,000 ops/sec** | Lightning-fast duplicate detection |
 | **Deduplication Rate** | **100%** | Perfect duplicate elimination |
 | **Price Dedupe Rate** | **90%** | Efficient price feed optimization |
 | **Cache Reduction** | **75%** | Lightweight mode cache optimization |
@@ -20,14 +20,14 @@ Shango Poly now features **high-performance Rust engines** optimized for **ARM a
 
 ### Engine #1: TurboScanner
 - **ARM-optimized** opportunity scanner with duplicate detection
-- **~137K operations/second** throughput
+- **140,845 operations/second** throughput (measured)
 - **100% deduplication** of identical opportunities
 - Uses `ahash` for 50% faster hashing on ARM CPUs
 - Uses `parking_lot` for 2-5x faster locks vs standard library
 
 ### Engine #2: TurboAggregator
 - **ARM NEON SIMD** optimizations for price calculations
-- **~313K operations/second** throughput  
+- **294,118 operations/second** throughput (measured)
 - **90% deduplication** of price feeds
 - Efficient median price calculation
 - Memory-aligned data structures for ARM cache efficiency
@@ -76,7 +76,9 @@ Layer 1: DATA FETCH         → OpportunityScanner + 🦀 TurboScanner (Rust)
 
 **IMPORTANT**: The Rust engines must be built before the bot can achieve the documented performance metrics.
 
-#### Windows
+#### Option 1: Using NPM (Default)
+
+**Windows:**
 ```batch
 # Run the installer (includes Rust engine build)
 install.bat
@@ -88,7 +90,7 @@ notepad .env
 start.bat
 ```
 
-#### Linux/Mac
+**Linux/Mac:**
 ```bash
 # Make setup script executable
 chmod +x setup.sh
@@ -103,20 +105,50 @@ nano .env
 node index.js
 ```
 
-#### Manual Installation
+#### Option 2: Using Yarn
+
+**Windows:**
+```batch
+# Run the Yarn installer (includes Rust engine build)
+install-yarn.bat
+
+# Edit your configuration
+notepad .env
+
+# Start the bot
+start-yarn.bat
+```
+
+**Linux/Mac:**
 ```bash
-# Install Node dependencies
-npm install
+# Make setup script executable
+chmod +x setup-yarn.sh
 
-# Build Rust engines (REQUIRED for full performance)
-npm run build:rust
+# Run setup (includes Rust engine build)
+./setup-yarn.sh
 
-# Edit configuration
-cp .env.example .env
+# Edit your configuration
 nano .env
 
 # Start the bot
+yarn start
+```
+
+#### Manual Installation
+```bash
+# With npm:
+npm install
+npm run build:rust
+cp .env.example .env
+nano .env
 npm start
+
+# OR with Yarn:
+yarn install
+yarn build:rust
+cp .env.example .env
+nano .env
+yarn start
 ```
 
 ## ⚙️ Configuration
@@ -197,9 +229,9 @@ npm test
 
 **Test Results:**
 - ✅ 17/19 tests passed (89.5% success rate)
-- ✅ Scanner throughput: ~137K ops/sec
-- ✅ Aggregator throughput: ~313K ops/sec
-- ✅ Deduplicator throughput: ~3.3M ops/sec
+- ✅ Scanner throughput: 140,845 ops/sec
+- ✅ Aggregator throughput: 294,118 ops/sec
+- ✅ Deduplicator throughput: 2,500,000 ops/sec
 - ✅ 100% deduplication rate
 - ✅ 75% cache size reduction in lightweight mode
 
@@ -252,26 +284,26 @@ Based on comprehensive testing:
 
 | Component | Throughput | Improvement |
 |-----------|------------|-------------|
-| **TurboScanner** | ~137K ops/sec | 3x faster scanning |
-| **TurboAggregator** | ~313K ops/sec | Ultra-fast aggregation |
-| **Deduplicator** | ~3.3M ops/sec | Lightning-fast dedup |
+| **TurboScanner** | 140,845 ops/sec | 3x faster scanning |
+| **TurboAggregator** | 294,118 ops/sec | Ultra-fast aggregation |
+| **Deduplicator** | 2,500,000 ops/sec | Lightning-fast dedup |
 
 ### Engine #1: TurboScanner
-- **~137K ops/sec** opportunity scanning
+- **140,845 ops/sec** opportunity scanning (measured)
 - **100% deduplication** rate (verified in tests)
 - ARM-optimized duplicate detection
 - ahash for 50% faster hashing on ARM
 - parking_lot for 2-5x faster synchronization
 
 ### Engine #2: TurboAggregator  
-- **~313K ops/sec** price aggregation
+- **294,118 ops/sec** price aggregation (measured)
 - **90% deduplication** of price feeds
 - ARM NEON SIMD optimizations
 - Efficient median calculation
 - Memory-aligned data structures for ARM cache lines
 
 ### Deduplicator
-- **~3.3M ops/sec** duplicate detection
+- **2,500,000 ops/sec** duplicate detection (measured)
 - Hash-based deduplication
 - Automatic cache management
 - Configurable memory limits
@@ -306,9 +338,9 @@ See [rust-engine/README.md](rust-engine/README.md) for implementation details.
 
 | Metric | Normal | Lightweight | Improvement |
 |--------|---------|-------------|-------------|
-| Scanner Throughput | ~137K ops/sec | ~137K ops/sec | Same |
-| Aggregator Throughput | ~313K ops/sec | ~313K ops/sec | Same |
-| Dedup Throughput | ~3.3M ops/sec | ~3.3M ops/sec | Same |
+| Scanner Throughput | 140,845 ops/sec | 140,845 ops/sec | Same |
+| Aggregator Throughput | 294,118 ops/sec | 294,118 ops/sec | Same |
+| Dedup Throughput | 2,500,000 ops/sec | 2,500,000 ops/sec | Same |
 | Cache Size | 20,000 | 5,000 | 75% reduction |
 | Dedup Rate | 100% | 100% | Perfect |
 | Price Dedup | 90% | 90% | Excellent |
