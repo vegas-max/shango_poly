@@ -2,6 +2,25 @@
 
 Advanced MEV arbitrage bot for Polygon network with **twin turbo Rust engines**, dynamic flash loan sizing, and backward data flow architecture.
 
+## 📊 Backtesting Results (90-Day Simulation)
+
+**System Viability**: ⚠️ **HIGH POTENTIAL BUT CRITICAL ISSUES**
+
+| Metric | Result | Status |
+|--------|--------|--------|
+| **ROI** | 377.78% | ✅ Excellent |
+| **Win Rate** | 81.11% | ✅ Good consistency |
+| **Trade Success** | 38.24% | ⚠️ **TOO LOW** |
+| **Max Drawdown** | 1.49% | ✅ Low risk |
+| **Avg Daily Profit** | 0.42 ETH | ✅ Good |
+
+**Verdict**: System shows strong profit potential but requires execution improvements before production deployment.
+- ✅ Good: Opportunity identification works well (81% daily win rate)
+- ⚠️ Critical: Trade execution success rate too low (38%)
+- 💡 Recommendation: Fix execution logic, then test with 2-5 ETH
+
+See [HONEST_ASSESSMENT.md](HONEST_ASSESSMENT.md) for complete analysis or run `npm run simulate` for your own test.
+
 ## 🦀 Twin Turbo Rust Engines (NEW!)
 
 Shango Poly now features **high-performance Rust engines** optimized for **ARM architecture**, delivering significant performance improvements:
