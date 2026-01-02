@@ -8,6 +8,7 @@
     "dev": "nodemon index.js",
     "test": "node scripts/test-comprehensive.js",
     "compete": "node scripts/bot-competition.js",
+    "simulate": "node scripts/run-simulation.js",
     "build:rust": "cd rust-engine && cargo build --release",
     "test:rust": "cd rust-engine && cargo test",
     "benchmark": "node scripts/benchmark-rust-engines.js"

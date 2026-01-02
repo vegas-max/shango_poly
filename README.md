@@ -224,6 +224,24 @@ node scripts/test-connection.js
 node index.js
 ```
 
+### Run Comprehensive Backtesting Simulation
+```bash
+# Run 90-day profitability simulation (default)
+npm run simulate
+
+# Run 180-day simulation (6 months) with custom starting balance
+SIMULATION_DAYS=180 STARTING_BALANCE_ETH=20 npm run simulate
+```
+
+Runs a comprehensive backtesting simulation with realistic market conditions, providing honest assessment of profitability expectations over 90-180 days. Includes:
+- Daily/weekly/monthly profitability tracking
+- Risk analysis (volatility, drawdown, streaks)
+- Realistic cost modeling (gas, slippage, competition)
+- Honest conclusions about system viability
+- Detailed recommendations for improvements
+
+See [docs/SIMULATION.md](docs/SIMULATION.md) for complete guide.
+
 ## 🦀 Rust Twin Turbo Engines
 
 The system includes two high-performance Rust engines optimized for ARM architecture with verified performance metrics.
