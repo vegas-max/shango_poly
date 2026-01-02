@@ -15,5 +15,4 @@ competition-results.json
 rust-engine/target/
 rust-engine/Cargo.lock
 rust-engine/*.node
-rust-engine/index.js
-rust-engine/index.d.ts
+# Note: rust-engine/index.js is the loader and MUST be committed

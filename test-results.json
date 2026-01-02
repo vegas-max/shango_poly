@@ -1,17 +1,17 @@
 {
   "total": 19,
-  "passed": 9,
-  "failed": 10,
+  "passed": 17,
+  "failed": 2,
   "metrics": {
-    "deduplicationRate": "0.0%",
-    "scannerThroughput": "∞ ops/sec",
-    "priceDeduplicationRate": "0.0%",
-    "aggregatorThroughput": "∞ ops/sec",
-    "deduplicatorThroughput": "5,000,000 ops/sec",
-    "normalModeMemory": "NaN KB",
-    "lightweightModeMemory": "NaN KB",
-    "memoryReduction": "NaN%",
+    "deduplicationRate": "100.0%",
+    "scannerThroughput": "136,986 ops/sec",
+    "priceDeduplicationRate": "90.0%",
+    "aggregatorThroughput": "312,500 ops/sec",
+    "deduplicatorThroughput": "2,500,000 ops/sec",
+    "normalModeMemory": "125 KB",
+    "lightweightModeMemory": "125 KB",
+    "memoryReduction": "0.0%",
     "cacheReduction": "75%",
-    "speedImprovement": "NaNx"
+    "speedImprovement": "1.04x"
   }
 }
