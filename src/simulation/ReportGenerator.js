@@ -211,7 +211,24 @@ class ReportGenerator {
 
     logger.info('');
     
-    if (roi > 50 && successRate > 50 && winRate > 60) {
+    // Special case: High ROI but low success rate
+    if (roi > 100 && successRate < 50 && winRate > 70) {
+      logger.info('  ⚠️  This system shows HIGH ROI but CRITICAL execution issues:');
+      logger.info(`      - ROI of ${roi.toFixed(2)}% suggests good profit potential`);
+      logger.info(`      - BUT success rate of ${successRate}% is too low for reliability`);
+      logger.info(`      - Win rate of ${winRate}% shows good day-to-day consistency`);
+      logger.info('  ⚠️  ANALYSIS: The few successful trades are very profitable, but most trades fail.');
+      logger.info('      This pattern suggests:');
+      logger.info('      - Poor trade execution/validation logic');
+      logger.info('      - High slippage or front-running on failed trades');
+      logger.info('      - Opportunity identification is good, but execution needs work');
+      logger.info('  💡 RECOMMENDATION: Fix execution logic FIRST, then re-test');
+      logger.info('      Priority improvements:');
+      logger.info('      1. Better slippage protection');
+      logger.info('      2. MEV protection (Flashbots)');
+      logger.info('      3. Improved gas price optimization');
+      logger.info('      4. Pre-execution liquidity validation');
+    } else if (roi > 50 && successRate > 50 && winRate > 60) {
       logger.info('  ✅ This system shows STRONG profit potential in simulated conditions.');
       logger.info('  ✅ With proper risk management, production deployment is recommended.');
       logger.info('  ⚠️  However, real market conditions include additional challenges:');
@@ -219,7 +236,7 @@ class ReportGenerator {
       logger.info('      - Actual slippage may be higher than simulated');
       logger.info('      - Gas prices can spike unpredictably');
       logger.info('  💡 RECOMMENDATION: Start with SMALL capital and monitor closely');
-    } else if (roi > 20 && successRate > 40) {
+    } else if (roi > 20 && (successRate > 40 || winRate > 60)) {
       logger.info('  ⚠️  This system shows MODERATE profit potential in simulated conditions.');
       logger.info('  ⚠️  Consider the following before production deployment:');
       logger.info('      - Implement ALL suggested improvements');
