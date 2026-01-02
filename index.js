@@ -32,8 +32,21 @@ async function main() {
     // Initialize provider
     logger.info('Connecting to Polygon network...');
     const provider = new ethers.providers.JsonRpcProvider(config.network.rpcUrl);
-    const network = await provider.getNetwork();
+    
+    // Test connection with timeout
+    const connectionTimeout = 10000; // 10 seconds
+    const connectionPromise = provider.getNetwork();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout')), connectionTimeout)
+    );
+    
+    const network = await Promise.race([connectionPromise, timeoutPromise]);
     logger.info(`Connected to network: ${network.name} (Chain ID: ${network.chainId})`);
+
+    // Verify we're on Polygon mainnet
+    if (network.chainId !== 137) {
+      logger.warn(`⚠️  Not connected to Polygon mainnet (chainId: ${network.chainId})`);
+    }
 
     // Initialize Layer 3: ROUTING - DexInterface
     logger.info('Initializing DEX Interface (Layer 3: ROUTING)...');
@@ -132,6 +145,21 @@ async function main() {
 
   } catch (error) {
     logger.error('Fatal error:', error);
+    
+    // Provide helpful error messages for common issues
+    if (error.message.includes('Connection timeout') || error.code === 'NETWORK_ERROR') {
+      logger.error('');
+      logger.error('RPC Connection Error - Please check:');
+      logger.error('  1. Your POLYGON_RPC_URL in .env is correct');
+      logger.error('  2. You have internet connectivity');
+      logger.error('  3. The RPC endpoint is operational');
+      logger.error('  4. Consider using a backup RPC: ' + config.network.backupRpcUrl);
+    } else if (error.message.includes('PRIVATE_KEY')) {
+      logger.error('');
+      logger.error('Configuration Error:');
+      logger.error('  Please set a valid PRIVATE_KEY in your .env file');
+    }
+    
     process.exit(1);
   }
 }
