@@ -12,6 +12,7 @@ package-lock.json
 competition-results.json
 simulation-results.json
 simulation-daily-results.csv
+test-results.json
 
 # Rust build artifacts
 rust-engine/target/

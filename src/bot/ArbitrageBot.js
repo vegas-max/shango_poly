@@ -20,6 +20,8 @@ class ArbitrageBot {
       scanned: 0,
       detected: 0,
       validated: 0,
+      simulated: 0,
+      simulationFailed: 0,
       executed: 0,
       failed: 0
     };
@@ -159,6 +161,21 @@ class ArbitrageBot {
         expectedProfit: profitCalc.netProfit
       };
 
+      // SIMULATE transaction before broadcasting
+      logger.info('Step 1: Simulating transaction...');
+      const simulation = await this.executor.simulateTransaction(executionParams);
+      this.executionStats.simulated++;
+      
+      if (!simulation.success) {
+        logger.warn('Transaction simulation failed - skipping execution', {
+          reason: simulation.reason,
+          error: simulation.error
+        });
+        this.executionStats.simulationFailed++;
+        return;
+      }
+
+      logger.info('Step 2: Simulation passed - proceeding with broadcast');
       const result = await this.executor.execute(executionParams);
 
       if (result.success) {
@@ -231,6 +248,8 @@ class ArbitrageBot {
       scanned: 0,
       detected: 0,
       validated: 0,
+      simulated: 0,
+      simulationFailed: 0,
       executed: 0,
       failed: 0
     };

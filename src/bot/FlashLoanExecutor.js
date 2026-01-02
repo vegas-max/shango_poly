@@ -20,6 +20,54 @@ class FlashLoanExecutor {
   }
 
   /**
+   * Simulate a transaction before broadcasting to validate it will succeed
+   * @param {Object} opportunity - Arbitrage opportunity to simulate
+   * @returns {Object} Simulation result with success status and details
+   */
+  async simulateTransaction(opportunity) {
+    logger.info('Simulating transaction before broadcast', {
+      asset: opportunity.asset,
+      amount: opportunity.amount.toString()
+    });
+
+    try {
+      // Use callStatic to simulate the transaction without broadcasting
+      const result = await this.contract.callStatic.executeArbitrage(
+        opportunity.asset,
+        opportunity.amount,
+        opportunity.path,
+        opportunity.dexes,
+        {
+          gasLimit: opportunity.gasLimit,
+          gasPrice: opportunity.gasPrice
+        }
+      );
+
+      logger.info('Transaction simulation successful', {
+        result: result.toString()
+      });
+
+      return {
+        success: true,
+        simulationResult: result,
+        message: 'Transaction simulation passed - safe to broadcast'
+      };
+    } catch (error) {
+      logger.warn('Transaction simulation failed', {
+        error: error.message,
+        reason: error.reason || 'Unknown'
+      });
+
+      return {
+        success: false,
+        error: error.message,
+        reason: error.reason,
+        message: 'Transaction would fail - skipping broadcast'
+      };
+    }
+  }
+
+  /**
    * Execute a flash loan arbitrage trade
    * @param {Object} opportunity - Validated arbitrage opportunity
    * @returns {Object} Transaction result
