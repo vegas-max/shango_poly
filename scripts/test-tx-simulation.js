@@ -5,6 +5,10 @@ const logger = require('../src/utils/logger');
 
 console.log('Testing Transaction Simulation Feature...\n');
 
+// Test constants
+const TEST_PRIVATE_KEY = '0x1111111111111111111111111111111111111111111111111111111111111111';
+const TEST_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
+
 // Create a proper mock provider
 class MockProvider extends ethers.providers.BaseProvider {
   constructor() {
@@ -67,8 +71,8 @@ async function testSimulationSuccess() {
 
   const executor = new FlashLoanExecutor(
     mockProvider,
-    '0x0000000000000000000000000000000000000000',
-    '0x1111111111111111111111111111111111111111111111111111111111111111'
+    TEST_CONTRACT_ADDRESS,
+    TEST_PRIVATE_KEY
   );
 
   // Inject mock contract
@@ -112,8 +116,8 @@ async function testSimulationFailure() {
 
   const executor = new FlashLoanExecutor(
     mockProvider,
-    '0x0000000000000000000000000000000000000000',
-    '0x1111111111111111111111111111111111111111111111111111111111111111'
+    TEST_CONTRACT_ADDRESS,
+    TEST_PRIVATE_KEY
   );
 
   // Inject mock contract that will fail
@@ -161,8 +165,8 @@ async function testSimulationBeforeExecution() {
 
   const executor = new FlashLoanExecutor(
     mockProvider,
-    '0x0000000000000000000000000000000000000000',
-    '0x1111111111111111111111111111111111111111111111111111111111111111'
+    TEST_CONTRACT_ADDRESS,
+    TEST_PRIVATE_KEY
   );
 
   // Mock contract that tracks calls
