@@ -153,11 +153,31 @@ class OpportunityScanner {
       return { valid: false, reason: 'Opportunity no longer profitable' };
     }
 
+    // Validate liquidity depth
+    const liquidityValidation = await this.validateLiquidity(opportunity);
+    if (!liquidityValidation.valid) {
+      return liquidityValidation;
+    }
+
+    // Validate price impact
+    const priceImpactValidation = await this.validatePriceImpact(opportunity);
+    if (!priceImpactValidation.valid) {
+      return priceImpactValidation;
+    }
+
+    // Calculate dynamic slippage tolerance
+    const slippageTolerance = await this.calculateDynamicSlippage({
+      ...opportunity,
+      liquidityScore: liquidityValidation.score
+    });
+
     return {
       valid: true,
       opportunity: {
         ...opportunity,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        slippageTolerance,
+        liquidityScore: liquidityValidation.score
       }
     };
   }
@@ -279,6 +299,12 @@ class OpportunityScanner {
 
     // Factor 4: Network congestion adjustment
     try {
+      // Access provider through dexInterface
+      if (!this.dexInterface.provider) {
+        logger.debug('No provider available for gas price check');
+        return slippage;
+      }
+      
       const gasPrice = await this.dexInterface.provider.getGasPrice();
       const gasPriceGwei = parseFloat(ethers.utils.formatUnits(gasPrice, 'gwei'));
       

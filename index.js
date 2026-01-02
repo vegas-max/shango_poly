@@ -9,6 +9,7 @@ const SushiSwapDex = require('./src/dex/SushiSwapDex');
 const config = require('./config');
 const logger = require('./src/utils/logger');
 const fs = require('fs');
+const path = require('path');
 
 async function main() {
   logger.info('='.repeat(70));
@@ -58,11 +59,22 @@ async function main() {
 
     // Initialize ArbitrageBot (orchestrates all layers)
     logger.info('Initializing Arbitrage Bot...');
+    
+    // Load Flash Loan ABI
+    let contractABI = [];
+    try {
+      const abiPath = path.join(__dirname, 'config', 'flashLoanABI.json');
+      contractABI = JSON.parse(fs.readFileSync(abiPath, 'utf8'));
+      logger.info('✅ Flash Loan ABI loaded successfully');
+    } catch (error) {
+      logger.warn('⚠️  Could not load Flash Loan ABI, using empty ABI');
+    }
+    
     const botConfig = {
       ...config.trading,
       ...config.security,
       contractAddress: config.contracts.flashLoanArbitrage.address || '0x0000000000000000000000000000000000000000',
-      contractABI: [] // Would load actual ABI in production
+      contractABI
     };
 
     const bot = new ArbitrageBot(botConfig);

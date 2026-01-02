@@ -70,7 +70,9 @@ class ArbitrageBot {
     
     // Get initial balance and initialize risk manager
     try {
-      const balance = await provider.getBalance(this.config.walletAddress || this.config.privateKey);
+      // Get wallet address from private key
+      const wallet = new ethers.Wallet(this.config.privateKey, provider);
+      const balance = await provider.getBalance(wallet.address);
       this.riskManager.initialize(balance);
       logger.info('✅ Risk Manager initialized');
     } catch (error) {
@@ -345,7 +347,6 @@ class ArbitrageBot {
         }
       }
     }
-  }
   }
 
   /**
