@@ -451,7 +451,7 @@ class BacktestingEngine {
     const maxDrawdown = parseFloat(this.results.riskAnalysis.maxDrawdown);
     const successRate = parseFloat(this.results.metrics.successRate);
 
-    let viability = 'UNKNOWN';
+    let viability;
     let recommendation = '';
     let warnings = [];
     let improvements = [];
