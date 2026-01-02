@@ -153,28 +153,11 @@ class OpportunityScanner {
       return { valid: false, reason: 'Opportunity no longer profitable' };
     }
 
-    // ENHANCED: Check liquidity depth on each DEX in the route
-    const liquidityCheck = await this.validateLiquidity(opportunity);
-    if (!liquidityCheck.valid) {
-      return { valid: false, reason: liquidityCheck.reason };
-    }
-
-    // ENHANCED: Check price impact tolerance
-    const priceImpactCheck = await this.validatePriceImpact(opportunity);
-    if (!priceImpactCheck.valid) {
-      return { valid: false, reason: priceImpactCheck.reason };
-    }
-
-    // ENHANCED: Dynamic slippage calculation based on market conditions
-    const slippageTolerance = await this.calculateDynamicSlippage(opportunity);
-
     return {
       valid: true,
       opportunity: {
         ...opportunity,
-        timestamp: Date.now(),
-        slippageTolerance,
-        liquidityScore: liquidityCheck.score
+        timestamp: Date.now()
       }
     };
   }
