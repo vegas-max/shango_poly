@@ -1,9 +1,13 @@
 // Main ArbitrageBot - Orchestrates all layers from EXECUTION to DATA FETCH
+const { ethers } = require('ethers');
 const FlashLoanExecutor = require('./FlashLoanExecutor');
 const FlashLoanCalculator = require('./FlashLoanCalculator');
 const OpportunityScanner = require('./OpportunityScanner');
 const logger = require('../utils/logger');
 const { getInstance: getRustEngineManager } = require('../utils/RustEngineManager');
+const RiskManager = require('../utils/RiskManager');
+const GasOptimizer = require('../utils/GasOptimizer');
+const MEVProtection = require('../utils/MEVProtection');
 
 class ArbitrageBot {
   constructor(config) {
@@ -14,6 +18,12 @@ class ArbitrageBot {
     this.dexInterface = null;
     this.priceOracle = null;
     this.rustEngines = null;
+    
+    // High-Priority Protocol Efficiency Modules
+    this.riskManager = null;
+    this.gasOptimizer = null;
+    this.mevProtection = null;
+    
     this.isRunning = false;
     this.opportunities = [];
     this.executionStats = {
@@ -23,7 +33,10 @@ class ArbitrageBot {
       simulated: 0,
       simulationFailed: 0,
       executed: 0,
-      failed: 0
+      failed: 0,
+      blockedByRisk: 0,
+      blockedByGas: 0,
+      mevProtected: 0
     };
   }
 
@@ -43,6 +56,43 @@ class ArbitrageBot {
     if (rustEnabled) {
       logger.info('🦀 Twin Turbo Rust Engines active!');
     }
+
+    // Initialize High-Priority Protocol Efficiency Modules
+    logger.info('🚀 Initializing Protocol Efficiency Features...');
+    
+    // Priority 4: Risk Management
+    this.riskManager = new RiskManager({
+      dailyLossLimitEth: parseFloat(process.env.DAILY_LOSS_LIMIT_ETH || '0.5'),
+      maxConsecutiveFailures: parseInt(process.env.MAX_CONSECUTIVE_FAILURES || '5'),
+      maxDrawdownPercent: parseFloat(process.env.MAX_DRAWDOWN_PERCENT || '10'),
+      minBalanceEth: parseFloat(process.env.MIN_BALANCE_ETH || '1.0')
+    });
+    
+    // Get initial balance and initialize risk manager
+    try {
+      const balance = await provider.getBalance(this.config.walletAddress || this.config.privateKey);
+      this.riskManager.initialize(balance);
+      logger.info('✅ Risk Manager initialized');
+    } catch (error) {
+      logger.warn('Could not get balance for risk manager, using default');
+    }
+
+    // Priority 3: Gas Optimization
+    this.gasOptimizer = new GasOptimizer(provider, {
+      maxGasPriceGwei: this.config.maxGasPriceGwei,
+      targetGasPriceGwei: parseFloat(process.env.TARGET_GAS_PRICE_GWEI || '100'),
+      peakHourGasMultiplier: parseFloat(process.env.PEAK_HOUR_GAS_MULTIPLIER || '1.5')
+    });
+    logger.info('✅ Gas Optimizer initialized');
+
+    // Priority 2: MEV Protection
+    this.mevProtection = new MEVProtection({
+      usePrivateTransactions: process.env.USE_PRIVATE_TRANSACTIONS === 'true',
+      flashbotsRpcUrl: process.env.FLASHBOTS_RPC_URL || null,
+      bundleTransactions: process.env.BUNDLE_TRANSACTIONS === 'true',
+      minTimeBetweenTrades: parseInt(process.env.MIN_TIME_BETWEEN_TRADES || '30000')
+    });
+    logger.info('✅ MEV Protection initialized');
 
     // Layer 7: EXECUTION
     this.executor = new FlashLoanExecutor(
@@ -68,7 +118,7 @@ class ArbitrageBot {
       this.config
     );
 
-    logger.info('ArbitrageBot initialized successfully');
+    logger.info('ArbitrageBot initialized successfully with protocol efficiency features');
   }
 
   /**
@@ -100,6 +150,7 @@ class ArbitrageBot {
 
   /**
    * Handle discovered opportunity - flows BACKWARD through layers
+   * ENHANCED: With Protocol Efficiency Features (Risk Management, Gas Optimization, MEV Protection)
    * @param {Object} opportunity - Discovered opportunity from scanner
    */
   async handleOpportunity(opportunity) {
@@ -107,6 +158,21 @@ class ArbitrageBot {
     this.executionStats.detected++;
 
     try {
+      // PROTOCOL EFFICIENCY: Reset daily stats if new day
+      if (this.riskManager) {
+        this.riskManager.resetDailyStats();
+      }
+
+      // PROTOCOL EFFICIENCY: Priority 4 - Check risk management limits
+      if (this.riskManager) {
+        const riskCheck = this.riskManager.canTrade();
+        if (!riskCheck.allowed) {
+          logger.warn('Trade blocked by risk manager', { reason: riskCheck.reason });
+          this.executionStats.blockedByRisk++;
+          return;
+        }
+      }
+
       // Use Rust engine for duplicate detection if available
       if (this.rustEngines && this.rustEngines.isAvailable()) {
         const oppKey = `${opportunity.path.join('-')}|${opportunity.dexes.join('-')}`;
@@ -141,8 +207,20 @@ class ArbitrageBot {
         return;
       }
 
+      // PROTOCOL EFFICIENCY: Priority 3 - Get optimal gas price and check if we should trade
+      const gasInfo = this.gasOptimizer 
+        ? await this.gasOptimizer.getOptimalGasPrice()
+        : { gasPrice: await this.executor.provider.getGasPrice(), shouldTrade: true };
+
+      if (!gasInfo.shouldTrade) {
+        logger.info('Trade blocked by gas optimizer', { reason: gasInfo.reason });
+        this.executionStats.blockedByGas++;
+        return;
+      }
+
+      const gasPrice = gasInfo.gasPrice;
+
       // LAYER 6: Build transaction parameters
-      const gasPrice = await this.getOptimalGasPrice();
       const gasLimit = await this.executor.estimateGas({
         asset: loanDetails.asset,
         amount: loanDetails.amount,
@@ -150,16 +228,44 @@ class ArbitrageBot {
         dexes: opportunity.dexes
       });
 
+      // PROTOCOL EFFICIENCY: Priority 3 - Check profitability after gas costs
+      if (this.gasOptimizer) {
+        const profitCheck = this.gasOptimizer.checkProfitabilityAfterGas(
+          profitCalc.netProfit,
+          gasPrice,
+          gasLimit.toNumber()
+        );
+        
+        if (!profitCheck.profitable) {
+          logger.info('Not profitable after gas costs', {
+            expectedProfit: profitCheck.expectedProfit.toString(),
+            gasCost: profitCheck.gasCost.toString(),
+            netProfit: profitCheck.netProfit.toString()
+          });
+          return;
+        }
+      }
+
       // LAYER 7: EXECUTE the flash loan arbitrage
-      const executionParams = {
+      let executionParams = {
         asset: loanDetails.asset,
         amount: loanDetails.amount,
         path: opportunity.path,
         dexes: opportunity.dexes,
         gasPrice,
         gasLimit,
-        expectedProfit: profitCalc.netProfit
+        expectedProfit: profitCalc.netProfit,
+        slippageTolerance: validation.opportunity.slippageTolerance
       };
+
+      // PROTOCOL EFFICIENCY: Priority 2 - Apply MEV protection
+      if (this.mevProtection) {
+        executionParams = await this.mevProtection.prepareProtectedTransaction(executionParams);
+        if (executionParams.flashbots) {
+          this.executionStats.mevProtected++;
+          logger.info('MEV protection applied to transaction');
+        }
+      }
 
       // SIMULATE transaction before broadcasting
       logger.info('Step 1: Simulating transaction...');
@@ -172,11 +278,25 @@ class ArbitrageBot {
           error: simulation.error
         });
         this.executionStats.simulationFailed++;
+        
+        // Record failed simulation as failed trade for risk management
+        if (this.riskManager) {
+          const currentBalance = await this.executor.provider.getBalance(
+            this.executor.wallet.address
+          );
+          this.riskManager.recordTrade(false, profitCalc.netProfit.mul(-1), currentBalance);
+        }
+        
         return;
       }
 
       logger.info('Step 2: Simulation passed - proceeding with broadcast');
       const result = await this.executor.execute(executionParams);
+
+      // Get updated balance for risk management
+      const currentBalance = await this.executor.provider.getBalance(
+        this.executor.wallet.address
+      );
 
       if (result.success) {
         logger.info('Arbitrage executed successfully', {
@@ -184,6 +304,12 @@ class ArbitrageBot {
           gasUsed: result.gasUsed.toString()
         });
         this.executionStats.executed++;
+        
+        // Record successful trade
+        if (this.riskManager) {
+          this.riskManager.recordTrade(true, profitCalc.netProfit, currentBalance);
+        }
+        
         this.opportunities.push({
           ...opportunity,
           timestamp: Date.now(),
@@ -193,11 +319,33 @@ class ArbitrageBot {
       } else {
         logger.error('Arbitrage execution failed', { error: result.error });
         this.executionStats.failed++;
+        
+        // Record failed trade
+        if (this.riskManager) {
+          // Estimate loss as gas cost
+          const gasCost = gasPrice.mul(gasLimit);
+          this.riskManager.recordTrade(false, gasCost.mul(-1), currentBalance);
+        }
       }
     } catch (error) {
       logger.error('Error handling opportunity', { error: error.message });
       this.executionStats.failed++;
+      
+      // Record error as failed trade
+      if (this.riskManager) {
+        try {
+          const currentBalance = await this.executor.provider.getBalance(
+            this.executor.wallet.address
+          );
+          this.riskManager.recordTrade(false, ethers.BigNumber.from(0), currentBalance);
+        } catch (balanceError) {
+          logger.error('Could not update risk manager after error', { 
+            error: balanceError.message 
+          });
+        }
+      }
     }
+  }
   }
 
   /**
@@ -221,7 +369,7 @@ class ArbitrageBot {
   }
 
   /**
-   * Get execution statistics
+   * Get execution statistics (enhanced with protocol efficiency metrics)
    */
   getStats() {
     const baseStats = {
@@ -235,6 +383,19 @@ class ArbitrageBot {
     // Add Rust engine stats if available
     if (this.rustEngines && this.rustEngines.isAvailable()) {
       baseStats.rustEngines = this.rustEngines.getStats();
+    }
+
+    // Add Protocol Efficiency stats
+    if (this.riskManager) {
+      baseStats.riskManagement = this.riskManager.getStats();
+    }
+    
+    if (this.gasOptimizer) {
+      baseStats.gasOptimization = this.gasOptimizer.getStats();
+    }
+    
+    if (this.mevProtection) {
+      baseStats.mevProtection = this.mevProtection.getStats();
     }
 
     return baseStats;
@@ -251,7 +412,10 @@ class ArbitrageBot {
       simulated: 0,
       simulationFailed: 0,
       executed: 0,
-      failed: 0
+      failed: 0,
+      blockedByRisk: 0,
+      blockedByGas: 0,
+      mevProtected: 0
     };
     this.opportunities = [];
   }

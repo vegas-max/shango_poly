@@ -7,7 +7,7 @@
     "scannerThroughput": "∞ ops/sec",
     "priceDeduplicationRate": "0.0%",
     "aggregatorThroughput": "∞ ops/sec",
-    "deduplicatorThroughput": "3,333,333 ops/sec",
+    "deduplicatorThroughput": "5,000,000 ops/sec",
     "normalModeMemory": "NaN KB",
     "lightweightModeMemory": "NaN KB",
     "memoryReduction": "NaN%",

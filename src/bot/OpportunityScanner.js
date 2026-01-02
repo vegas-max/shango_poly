@@ -261,21 +261,62 @@ class OpportunityScanner {
 
   /**
    * Calculate dynamic slippage tolerance based on market conditions
+   * ENHANCED: Priority 1 - Improved slippage calculation for better execution success
    * @param {Object} opportunity - Opportunity
    * @returns {number} Slippage tolerance in basis points
    */
   async calculateDynamicSlippage(opportunity) {
+    // Configuration constants
+    const CONGESTION_THRESHOLD_GWEI = 200;
+    const CONGESTION_SLIPPAGE_MULTIPLIER = 1.2;
+    const MAX_SLIPPAGE_BPS = 300; // 3%
+    
     // Base slippage tolerance
     let slippage = 50; // 0.5%
 
-    // Increase slippage for lower profit opportunities
+    // Factor 1: Adjust based on profit margin
     if (opportunity.profitBps < 100) {
-      slippage = 30; // 0.3% for tight margins
+      slippage = 30; // 0.3% for tight margins - be conservative
     } else if (opportunity.profitBps > 500) {
-      slippage = 100; // 1% for high profit
+      slippage = 100; // 1% for high profit - can afford more slippage
+    } else if (opportunity.profitBps > 1000) {
+      slippage = 150; // 1.5% for very high profit
     }
 
-    // TODO: Consider network congestion, volatility, etc.
+    // Factor 2: Increase slippage for multi-hop routes (more complexity = more slippage risk)
+    const hopCount = opportunity.path.length - 1;
+    if (hopCount > 2) {
+      slippage = Math.floor(slippage * 1.3); // 30% increase for 3+ hops
+    }
+
+    // Factor 3: Adjust for liquidity depth (lower liquidity = higher slippage needed)
+    if (opportunity.liquidityScore && opportunity.liquidityScore < 50) {
+      slippage = Math.floor(slippage * 1.4); // 40% increase for low liquidity
+    }
+
+    // Factor 4: Network congestion adjustment
+    try {
+      const gasPrice = await this.dexInterface.provider.getGasPrice();
+      const gasPriceGwei = parseFloat(ethers.utils.formatUnits(gasPrice, 'gwei'));
+      
+      // If gas is high, network is congested, need more slippage buffer
+      if (gasPriceGwei > CONGESTION_THRESHOLD_GWEI) {
+        slippage = Math.floor(slippage * CONGESTION_SLIPPAGE_MULTIPLIER);
+      }
+    } catch (error) {
+      // If can't check gas price, use default
+      logger.debug('Could not check gas price for slippage adjustment');
+    }
+
+    // Cap slippage at reasonable maximum
+    slippage = Math.min(slippage, MAX_SLIPPAGE_BPS);
+    
+    logger.debug('Dynamic slippage calculated', {
+      profitBps: opportunity.profitBps,
+      hopCount,
+      calculatedSlippage: slippage,
+      slippagePercent: (slippage / 100).toFixed(2) + '%'
+    });
     
     return slippage;
   }
