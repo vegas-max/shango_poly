@@ -5,7 +5,6 @@ class MarketDataProvider {
   constructor(provider, config) {
     this.provider = provider;
     this.config = config;
-    this.historicalData = new Map();
     this.marketPhases = this.initializeMarketPhases();
   }
 
