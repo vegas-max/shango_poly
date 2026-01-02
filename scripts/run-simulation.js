@@ -5,6 +5,7 @@ require('dotenv').config();
 const { ethers } = require('ethers');
 const BacktestingEngine = require('../src/simulation/BacktestingEngine');
 const MarketDataProvider = require('../src/simulation/MarketDataProvider');
+const RealDataProvider = require('../src/simulation/RealDataProvider');
 const ReportGenerator = require('../src/simulation/ReportGenerator');
 const ArbitrageBot = require('../src/bot/ArbitrageBot');
 const DexInterface = require('../src/dex/DexInterface');
@@ -18,6 +19,7 @@ const fs = require('fs');
 // Simulation configuration
 const SIMULATION_DAYS = parseInt(process.env.SIMULATION_DAYS || '90'); // Default 90 days
 const STARTING_BALANCE_ETH = process.env.STARTING_BALANCE_ETH || '10';
+const USE_REAL_DATA = process.env.USE_REAL_DATA !== 'false'; // Default to true (use real data)
 const REPORT_FILE = 'simulation-results.json';
 const CSV_FILE = 'simulation-daily-results.csv';
 
@@ -41,7 +43,7 @@ class SimulationRunner {
     logger.info('over a specified period to provide an HONEST assessment of profitability.');
     logger.info('');
     logger.info('The simulation includes:');
-    logger.info('  • Realistic market conditions (bull/bear/consolidation/crisis cycles)');
+    logger.info(`  • ${USE_REAL_DATA ? 'REAL historical on-chain data from Polygon network' : 'Realistic market conditions (bull/bear/consolidation/crisis cycles)'}`);
     logger.info('  • Gas costs, slippage, and MEV competition');
     logger.info('  • Daily, weekly, and monthly profitability tracking');
     logger.info('  • Comprehensive risk analysis');
@@ -113,20 +115,37 @@ class SimulationRunner {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - SIMULATION_DAYS);
 
-    // Initialize market data provider
-    this.marketDataProvider = new MarketDataProvider(this.provider, {
-      startDate: startDate,
-      endDate: endDate
-    });
+    // Initialize market data provider based on configuration
+    if (USE_REAL_DATA) {
+      logger.info('Using REAL historical data from Polygon network...');
+      this.marketDataProvider = new RealDataProvider(this.provider, {
+        startDate: startDate,
+        endDate: endDate
+      });
+    } else {
+      logger.info('Using synthetic market data...');
+      this.marketDataProvider = new MarketDataProvider(this.provider, {
+        startDate: startDate,
+        endDate: endDate
+      });
+    }
 
     await this.engine.initialize(startDate, endDate);
 
     logger.info('');
-    logger.info('Market Simulation Phases:');
-    const phases = this.marketDataProvider.getMarketPhasesSummary();
-    phases.forEach(phase => {
-      logger.info(`  • ${phase.name} (${phase.duration} days): ${phase.description}`);
-    });
+    if (USE_REAL_DATA) {
+      logger.info('Data Source: Real on-chain historical data');
+      logger.info('  • Real gas prices from Polygon blocks');
+      logger.info('  • Real DEX prices from QuickSwap and SushiSwap');
+      logger.info('  • Real arbitrage opportunities based on actual price differences');
+      logger.info('  • Historical market conditions derived from on-chain data');
+    } else {
+      logger.info('Market Simulation Phases:');
+      const phases = this.marketDataProvider.getMarketPhasesSummary();
+      phases.forEach(phase => {
+        logger.info(`  • ${phase.name} (${phase.duration} days): ${phase.description}`);
+      });
+    }
     logger.info('');
     logger.info('All components initialized successfully!');
     logger.info('');
@@ -218,18 +237,22 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
   console.log('Environment Variables:');
   console.log('  SIMULATION_DAYS         Number of days to simulate (default: 90)');
   console.log('  STARTING_BALANCE_ETH    Starting balance in ETH (default: 10)');
+  console.log('  USE_REAL_DATA           Use real on-chain historical data (default: true)');
   console.log('  MIN_PROFIT_BPS          Minimum profit in basis points (default: 50)');
   console.log('  MAX_GAS_PRICE_GWEI      Maximum gas price in Gwei (default: 150)');
   console.log('');
   console.log('Examples:');
-  console.log('  # Run 90-day simulation (default)');
-  console.log('  node scripts/run-simulation.js');
+  console.log('  # Run 90-day simulation with real data (default)');
+  console.log('  npm run simulate');
   console.log('');
   console.log('  # Run 180-day simulation with 20 ETH starting balance');
-  console.log('  SIMULATION_DAYS=180 STARTING_BALANCE_ETH=20 node scripts/run-simulation.js');
+  console.log('  SIMULATION_DAYS=180 STARTING_BALANCE_ETH=20 npm run simulate');
+  console.log('');
+  console.log('  # Run simulation with synthetic data (for testing)');
+  console.log('  USE_REAL_DATA=false npm run simulate');
   console.log('');
   console.log('  # Run 30-day simulation with custom parameters');
-  console.log('  SIMULATION_DAYS=30 MIN_PROFIT_BPS=100 node scripts/run-simulation.js');
+  console.log('  SIMULATION_DAYS=30 MIN_PROFIT_BPS=100 npm run simulate');
   console.log('');
   process.exit(0);
 }

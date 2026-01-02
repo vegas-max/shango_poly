@@ -72,8 +72,8 @@ class BacktestingEngine {
       // Get market conditions for this day
       const marketConditions = await marketDataProvider.getMarketConditions(this.currentSimTime);
       
-      // Simulate opportunities throughout the day
-      const dailyResults = await this.simulateDay(bot, marketConditions);
+      // Simulate opportunities throughout the day (pass dataProvider for real data)
+      const dailyResults = await this.simulateDay(bot, marketConditions, marketDataProvider);
       
       // Record daily results
       this.recordDailyResults(dayStart, dailyResults);
@@ -100,8 +100,9 @@ class BacktestingEngine {
    * Simulate one day of trading
    * @param {Object} bot - Trading bot instance
    * @param {Object} marketConditions - Market conditions for the day
+   * @param {Object} dataProvider - Market data provider (optional)
    */
-  async simulateDay(bot, marketConditions) {
+  async simulateDay(bot, marketConditions, dataProvider = null) {
     const dayResults = {
       opportunities: 0,
       tradesExecuted: 0,
@@ -111,11 +112,37 @@ class BacktestingEngine {
       trades: []
     };
 
-    // Simulate multiple opportunities throughout the day
-    const opportunitiesPerDay = this.calculateOpportunitiesPerDay(marketConditions);
+    let opportunities = [];
     
-    for (let i = 0; i < opportunitiesPerDay; i++) {
-      const opportunity = this.generateOpportunity(marketConditions);
+    // Try to get real arbitrage opportunities if data provider supports it
+    if (dataProvider && typeof dataProvider.getRealArbitrageOpportunities === 'function' && marketConditions.blockNumber) {
+      try {
+        const realOpps = await dataProvider.getRealArbitrageOpportunities(
+          new Date(this.currentSimTime),
+          marketConditions.blockNumber,
+          this.config.baseTokens,
+          this.config.intermediateTokens
+        );
+        
+        if (realOpps && realOpps.length > 0) {
+          opportunities = realOpps;
+          logger.debug(`Found ${realOpps.length} real arbitrage opportunities for ${marketConditions.date}`);
+        }
+      } catch (error) {
+        logger.debug('Could not fetch real opportunities, falling back to simulation', { error: error.message });
+      }
+    }
+    
+    // Fallback to synthetic opportunities if no real data available
+    if (opportunities.length === 0) {
+      const opportunitiesPerDay = this.calculateOpportunitiesPerDay(marketConditions);
+      for (let i = 0; i < opportunitiesPerDay; i++) {
+        opportunities.push(this.generateOpportunity(marketConditions));
+      }
+    }
+    
+    // Process each opportunity
+    for (const opportunity of opportunities) {
       dayResults.opportunities++;
 
       // Simulate bot decision making

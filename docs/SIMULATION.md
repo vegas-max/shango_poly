@@ -2,27 +2,42 @@
 
 ## Overview
 
-The Shango Poly backtesting simulation provides a comprehensive, **honest assessment** of the arbitrage system's profitability over realistic market conditions ranging from 90 days to 6 months.
+The Shango Poly backtesting simulation provides a comprehensive, **honest assessment** of the arbitrage system's profitability using **REAL historical on-chain data from the Polygon network** over periods ranging from 90 days to 6 months.
 
 ## What the Simulation Does
 
-### 1. Market Condition Modeling
-The simulation cycles through realistic market phases:
-- **Bull Market - High Volatility**: Strong uptrend with high trading volume
-- **Consolidation - Normal Conditions**: Sideways market
-- **Bear Market - Low Volatility**: Downtrend with reduced liquidity
-- **Extreme Volatility - Crisis**: Market crisis conditions
-- **Recovery - Increasing Activity**: Market recovery phase
-- **Low Activity - Weekend/Holiday**: Reduced opportunity periods
+### 1. Real On-Chain Data Integration (NEW!)
 
-### 2. Realistic Cost Modeling
-- **Gas Costs**: Simulates actual transaction costs (avg 350k gas per flash loan)
-- **Slippage**: Models price impact based on volatility (10-40% profit erosion)
+The simulation now uses **actual historical data** from the Polygon blockchain:
+
+- **Real Gas Prices**: Fetches actual gas prices from historical Polygon blocks
+- **Real DEX Prices**: Queries historical prices from QuickSwap and SushiSwap routers
+- **Real Arbitrage Opportunities**: Calculates actual price differences that existed between DEXes
+- **Real Market Conditions**: Derives volatility, liquidity, and competition from on-chain data
+- **Historical Block Data**: Uses actual block timestamps and network conditions
+
+**Data Sources:**
+- Polygon RPC for historical block data
+- DEX router contracts for historical price quotes
+- On-chain liquidity and volume indicators
+
+### 2. Market Condition Analysis
+
+The simulation analyzes real market phases based on on-chain data:
+- **Volatility**: Calculated from actual price movements
+- **Liquidity**: Derived from DEX reserves and trading activity
+- **Competition**: Estimated from volatility and volume patterns
+- **Gas Prices**: Real historical gas costs from Polygon blocks
+- **Market Phase**: Automatically classified (Bull/Bear/Consolidation/Crisis/Recovery/Low Activity)
+
+### 3. Realistic Cost Modeling
+- **Gas Costs**: Uses real historical gas prices from Polygon
+- **Slippage**: Models price impact based on actual volatility (10-40% profit erosion)
 - **MEV Competition**: Accounts for competition from other bots
-- **Execution Failure**: Realistic success rates based on market conditions
+- **Execution Failure**: Realistic success rates based on real market conditions
 
-### 3. Comprehensive Analysis
-- **Daily Profitability Tracking**: Every day's performance
+### 4. Comprehensive Analysis
+- **Daily Profitability Tracking**: Every day's performance with real data
 - **Weekly Aggregation**: 7-day performance summaries
 - **Monthly Aggregation**: 30-day performance summaries
 - **Risk Metrics**: Volatility, drawdown, losing streaks
@@ -33,7 +48,7 @@ The simulation cycles through realistic market phases:
 ### Quick Start
 
 ```bash
-# Run 90-day simulation (default)
+# Run 90-day simulation with REAL on-chain data (default)
 npm run simulate
 
 # Or directly:
@@ -43,11 +58,14 @@ node scripts/run-simulation.js
 ### Custom Configuration
 
 ```bash
-# 180-day simulation (6 months)
+# 180-day simulation (6 months) with real data
 SIMULATION_DAYS=180 npm run simulate
 
 # 120-day simulation with 20 ETH starting balance
 SIMULATION_DAYS=120 STARTING_BALANCE_ETH=20 npm run simulate
+
+# Use synthetic data for comparison (old behavior)
+USE_REAL_DATA=false npm run simulate
 
 # Custom profit threshold and gas limit
 MIN_PROFIT_BPS=100 MAX_GAS_PRICE_GWEI=200 npm run simulate
@@ -59,6 +77,7 @@ MIN_PROFIT_BPS=100 MAX_GAS_PRICE_GWEI=200 npm run simulate
 |----------|---------|-------------|
 | `SIMULATION_DAYS` | 90 | Number of days to simulate |
 | `STARTING_BALANCE_ETH` | 10 | Starting capital in ETH |
+| `USE_REAL_DATA` | true | Use real on-chain historical data |
 | `MIN_PROFIT_BPS` | 50 | Minimum profit threshold (0.5%) |
 | `MAX_GAS_PRICE_GWEI` | 150 | Maximum acceptable gas price |
 
@@ -161,20 +180,28 @@ Based on results, you'll get specific suggestions:
 
 ### Simulation vs Reality
 
-**What the Simulation Models:**
-✓ Market volatility cycles
-✓ Gas costs and fees
-✓ Competition effects
-✓ Slippage and price impact
-✓ Execution failures
+**What the Simulation Models (with Real Data):**
+✓ **REAL historical gas prices** from Polygon blocks
+✓ **REAL DEX prices** from QuickSwap and SushiSwap
+✓ **REAL arbitrage opportunities** that existed historically
+✓ Real market volatility from on-chain data
+✓ Real competition effects based on historical patterns
+✓ Slippage and price impact modeling
+✓ Execution failures based on real conditions
 
-**What's Different in Reality:**
-⚠️ Actual MEV competition is fiercer
-⚠️ Real slippage can be worse
-⚠️ Gas prices are more volatile
-⚠️ Smart contract risks exist
-⚠️ Network congestion impacts
+**What's Still Different in Live Trading:**
+⚠️ MEV competition has evolved (new bots since historical data)
+⚠️ Network conditions can change unexpectedly
+⚠️ Smart contract risks exist (bugs, exploits)
+⚠️ Future market conditions differ from historical
 ⚠️ Regulatory considerations
+⚠️ Black swan events not in historical data
+
+**Accuracy Improvements with Real Data:**
+- Gas cost predictions are now based on actual historical prices
+- Opportunity identification uses real price differences that existed
+- Market phase classification is data-driven, not synthetic
+- Results are more representative of actual trading conditions
 
 ### Production Deployment Checklist
 
