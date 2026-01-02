@@ -27,6 +27,10 @@ class MEVProtection {
       minTimeBetweenTrades: config.minTimeBetweenTrades || 30000, // 30 seconds
       randomizeDelay: config.randomizeDelay || true,
       
+      // MEV protection constants
+      delayJitterFactor: config.delayJitterFactor || 0.5, // 50% additional random delay
+      highValueProfitThresholdEth: config.highValueProfitThresholdEth || 0.5, // 0.5 ETH threshold
+      
       ...config
     };
 
@@ -108,7 +112,7 @@ class MEVProtection {
       
       // Add random jitter if enabled (0-50% additional delay)
       if (this.config.randomizeDelay) {
-        const jitter = Math.random() * baseDelay * 0.5;
+        const jitter = Math.random() * baseDelay * this.config.delayJitterFactor;
         return baseDelay + jitter;
       }
       
@@ -242,7 +246,7 @@ class MEVProtection {
     };
 
     // High-value trades should use private pool
-    const profitThreshold = 0.5; // 0.5 ETH
+    const profitThreshold = this.config.highValueProfitThresholdEth;
     if (opportunity.expectedProfit && opportunity.expectedProfit > profitThreshold) {
       recommendations.usePrivatePool = true;
       recommendations.reasons.push('High-value trade detected');

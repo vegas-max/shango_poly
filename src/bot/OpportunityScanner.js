@@ -266,6 +266,11 @@ class OpportunityScanner {
    * @returns {number} Slippage tolerance in basis points
    */
   async calculateDynamicSlippage(opportunity) {
+    // Configuration constants
+    const CONGESTION_THRESHOLD_GWEI = 200;
+    const CONGESTION_SLIPPAGE_MULTIPLIER = 1.2;
+    const MAX_SLIPPAGE_BPS = 300; // 3%
+    
     // Base slippage tolerance
     let slippage = 50; // 0.5%
 
@@ -294,18 +299,17 @@ class OpportunityScanner {
       const gasPrice = await this.dexInterface.provider.getGasPrice();
       const gasPriceGwei = parseFloat(ethers.utils.formatUnits(gasPrice, 'gwei'));
       
-      // If gas is high (> 200 gwei), network is congested, need more slippage buffer
-      if (gasPriceGwei > 200) {
-        slippage = Math.floor(slippage * 1.2); // 20% increase during congestion
+      // If gas is high, network is congested, need more slippage buffer
+      if (gasPriceGwei > CONGESTION_THRESHOLD_GWEI) {
+        slippage = Math.floor(slippage * CONGESTION_SLIPPAGE_MULTIPLIER);
       }
     } catch (error) {
       // If can't check gas price, use default
       logger.debug('Could not check gas price for slippage adjustment');
     }
 
-    // Cap slippage at reasonable maximum (3% = 300 bps)
-    const maxSlippage = 300;
-    slippage = Math.min(slippage, maxSlippage);
+    // Cap slippage at reasonable maximum
+    slippage = Math.min(slippage, MAX_SLIPPAGE_BPS);
     
     logger.debug('Dynamic slippage calculated', {
       profitBps: opportunity.profitBps,

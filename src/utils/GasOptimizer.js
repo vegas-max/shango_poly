@@ -122,7 +122,13 @@ class GasOptimizer {
    * @returns {Object} { trend: string, confidence: number, avgGwei: number }
    */
   predictGasTrend() {
-    if (this.gasHistory.length < 3) {
+    // Trend detection constants
+    const MIN_HISTORY_FOR_PREDICTION = 3;
+    const TREND_CHANGE_THRESHOLD_PERCENT = 10;
+    const DEFAULT_CONFIDENCE = 70;
+    const HIGH_CONFIDENCE = 80;
+    
+    if (this.gasHistory.length < MIN_HISTORY_FOR_PREDICTION) {
       return { trend: 'unknown', confidence: 0, avgGwei: 0 };
     }
 
@@ -134,7 +140,7 @@ class GasOptimizer {
     const olderHistory = this.gasHistory.slice(-10, -5);
 
     if (olderHistory.length === 0) {
-      return { trend: 'stable', confidence: 50, avgGwei };
+      return { trend: 'stable', confidence: DEFAULT_CONFIDENCE / 2, avgGwei };
     }
 
     const recentAvg = recentHistory.reduce((sum, entry) => sum + entry.gwei, 0) / recentHistory.length;
@@ -143,14 +149,14 @@ class GasOptimizer {
     const changePercent = ((recentAvg - olderAvg) / olderAvg) * 100;
 
     let trend = 'stable';
-    let confidence = 70;
+    let confidence = DEFAULT_CONFIDENCE;
 
-    if (changePercent > 10) {
+    if (changePercent > TREND_CHANGE_THRESHOLD_PERCENT) {
       trend = 'increasing';
-      confidence = 80;
-    } else if (changePercent < -10) {
+      confidence = HIGH_CONFIDENCE;
+    } else if (changePercent < -TREND_CHANGE_THRESHOLD_PERCENT) {
       trend = 'decreasing';
-      confidence = 80;
+      confidence = HIGH_CONFIDENCE;
     }
 
     return { trend, confidence, avgGwei, changePercent };

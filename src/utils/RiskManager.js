@@ -126,16 +126,11 @@ class RiskManager {
     if (success) {
       this.stats.successfulTrades++;
       this.stats.consecutiveFailures = 0; // Reset on success
-      
-      // If profit is positive, don't add to daily loss
-      if (profit.isNegative()) {
-        this.stats.dailyLoss = this.stats.dailyLoss.add(profit.abs());
-      }
     } else {
       this.stats.failedTrades++;
       this.stats.consecutiveFailures++;
       
-      // Add loss to daily loss
+      // Add loss to daily loss (only for failed trades)
       if (profit.isNegative()) {
         this.stats.dailyLoss = this.stats.dailyLoss.add(profit.abs());
       }
