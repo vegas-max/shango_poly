@@ -317,6 +317,23 @@ npm test
 - ✅ 100% deduplication rate
 - ✅ 75% cache size reduction in lightweight mode
 
+### System Validation (NEW!)
+```bash
+# Run comprehensive system validation
+npm run test:validate
+```
+
+**Validates:**
+- ✅ All RPC endpoints properly connected
+- ✅ All imports correct
+- ✅ All DEX methods implemented
+- ✅ All classes initialize properly
+- ✅ All calculations return correct values
+- ✅ Complete flow: boot → data → calculation → execution
+- **100% validation success rate (34/34 tests passing)**
+
+See [VALIDATION_REPORT.md](VALIDATION_REPORT.md) for complete details.
+
 ### Protocol Efficiency Tests (NEW!)
 ```bash
 # Test protocol efficiency features
