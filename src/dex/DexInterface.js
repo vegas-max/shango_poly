@@ -1,5 +1,4 @@
 // Layer 3: ROUTING - Finds best trading routes across DEXes
-const { ethers } = require('ethers');
 const logger = require('../utils/logger');
 
 class DexInterface {
@@ -107,69 +106,6 @@ class DexInterface {
    */
   getRegisteredDexes() {
     return Array.from(this.dexes.keys());
-  }
-
-  /**
-   * Get liquidity for a token pair on a specific DEX
-   * @param {string} dexName - DEX name
-   * @param {string} tokenIn - Input token address
-   * @param {string} tokenOut - Output token address
-   * @returns {BigNumber} Available liquidity
-   */
-  async getLiquidity(dexName, tokenIn, tokenOut) {
-    const dex = this.dexes.get(dexName);
-    if (!dex) {
-      throw new Error(`DEX ${dexName} not registered`);
-    }
-
-    // Try to get liquidity from DEX
-    if (dex.getLiquidity) {
-      return await dex.getLiquidity(tokenIn, tokenOut);
-    }
-
-    // Fallback: estimate from reserves if available
-    if (dex.getReserves) {
-      const reserves = await dex.getReserves(tokenIn, tokenOut);
-      return reserves.reserve0; // Return first reserve as approximation
-    }
-
-    // Default fallback: assume high liquidity
-    logger.warn(`DEX ${dexName} doesn't support liquidity checks, assuming sufficient`);
-    return ethers.BigNumber.from('1000000000000000000000000'); // 1M tokens
-  }
-
-  /**
-   * Get price impact for a trade on a specific DEX
-   * @param {string} dexName - DEX name
-   * @param {string} tokenIn - Input token address
-   * @param {string} tokenOut - Output token address
-   * @param {BigNumber} amountIn - Input amount
-   * @returns {number} Price impact percentage
-   */
-  async getPriceImpact(dexName, tokenIn, tokenOut, amountIn) {
-    const dex = this.dexes.get(dexName);
-    if (!dex) {
-      throw new Error(`DEX ${dexName} not registered`);
-    }
-
-    // Try to get price impact from DEX
-    if (dex.getPriceImpact) {
-      return await dex.getPriceImpact(tokenIn, tokenOut, amountIn);
-    }
-
-    // Fallback: calculate from quote
-    try {
-      const quote = await dex.getQuote(tokenIn, tokenOut, amountIn);
-      if (quote.priceImpact !== undefined) {
-        return quote.priceImpact;
-      }
-    } catch (error) {
-      logger.warn(`Failed to get price impact from ${dexName}`, { error: error.message });
-    }
-
-    // Default fallback: assume low impact
-    logger.warn(`DEX ${dexName} doesn't support price impact calculation, assuming 0.5%`);
-    return 0.5; // Conservative 0.5%
   }
 }
 
