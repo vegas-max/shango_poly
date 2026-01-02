@@ -295,14 +295,20 @@ node index.js
 
 ### Run Comprehensive Backtesting Simulation
 ```bash
-# Run 90-day profitability simulation (default)
+# Run 90-day profitability simulation with REAL on-chain data (default)
 npm run simulate
 
 # Run 180-day simulation (6 months) with custom starting balance
 SIMULATION_DAYS=180 STARTING_BALANCE_ETH=20 npm run simulate
+
+# Run simulation with synthetic data (for testing/comparison)
+USE_REAL_DATA=false npm run simulate
 ```
 
-Runs a comprehensive backtesting simulation with realistic market conditions, providing honest assessment of profitability expectations over 90-180 days. Includes:
+Runs a comprehensive backtesting simulation with **REAL historical on-chain data from Polygon**, providing honest assessment of profitability expectations over 90-180 days. Includes:
+- **Real DEX prices** from QuickSwap and SushiSwap historical data
+- **Real gas prices** from actual Polygon blocks
+- **Real arbitrage opportunities** based on actual price differences
 - Daily/weekly/monthly profitability tracking
 - Risk analysis (volatility, drawdown, streaks)
 - Realistic cost modeling (gas, slippage, competition)
