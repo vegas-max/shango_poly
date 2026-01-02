@@ -4,7 +4,7 @@
   "failed": 2,
   "metrics": {
     "deduplicationRate": "100.0%",
-    "scannerThroughput": "135,135 ops/sec",
+    "scannerThroughput": "140,845 ops/sec",
     "priceDeduplicationRate": "90.0%",
     "aggregatorThroughput": "294,118 ops/sec",
     "deduplicatorThroughput": "2,500,000 ops/sec",
@@ -12,6 +12,6 @@
     "lightweightModeMemory": "125 KB",
     "memoryReduction": "0.0%",
     "cacheReduction": "75%",
-    "speedImprovement": "1.04x"
+    "speedImprovement": "1.00x"
   }
 }

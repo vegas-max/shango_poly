@@ -1,16 +1,22 @@
 #!/bin/bash
 
-echo "Setting up Shango Poly Arbitrage Bot..."
+echo "Setting up Shango Poly Arbitrage Bot (using Yarn)..."
 echo
 
-echo "[STEP 1/4] Installing Node.js dependencies..."
-npm install
+echo "[STEP 1/4] Installing Node.js dependencies with Yarn..."
+if ! command -v yarn &> /dev/null; then
+    echo "[ERROR] Yarn is not installed. Please install Yarn first:"
+    echo "        npm install -g yarn"
+    echo "        OR visit: https://yarnpkg.com/getting-started/install"
+    exit 1
+fi
+yarn install
 echo
 
 echo "[STEP 2/4] Building Rust Twin Turbo Engines..."
 echo "[INFO] This step requires Rust >= 1.70.0 (install from https://rustup.rs)"
 if command -v cargo &> /dev/null; then
-    npm run build:rust
+    yarn build:rust
     echo "[SUCCESS] Rust engines built successfully"
 else
     echo "[WARNING] Rust not found. Install Rust to enable twin turbo engines."
@@ -43,5 +49,5 @@ echo "Next steps:"
 echo "1. Edit .env file with your RPC URLs and private key"
 echo "2. Deploy contracts/FlashLoanArbitrage.sol to Polygon"
 echo "3. Update CONTRACT_ADDRESS in .env"
-echo "4. Run: node index.js"
+echo "4. Run: yarn start"
 echo
