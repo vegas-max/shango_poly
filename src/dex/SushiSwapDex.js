@@ -3,10 +3,12 @@ const { ethers } = require('ethers');
 const logger = require('../utils/logger');
 
 class SushiSwapDex {
-  constructor(provider, config) {
+  constructor(provider, config, poolDataProvider = null) {
     this.provider = provider;
     this.config = config;
     this.routerAddress = config.router;
+    this.factoryAddress = config.factory;
+    this.poolDataProvider = poolDataProvider;
     
     this.routerABI = [
       'function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)',
@@ -18,6 +20,14 @@ class SushiSwapDex {
       this.routerABI,
       provider
     );
+  }
+
+  /**
+   * Set pool data provider for real-time data
+   */
+  setPoolDataProvider(poolDataProvider) {
+    this.poolDataProvider = poolDataProvider;
+    logger.debug('Pool data provider set for SushiSwap');
   }
 
   async getQuote(tokenIn, tokenOut, amountIn) {
@@ -52,16 +62,32 @@ class SushiSwapDex {
    */
   async getLiquidity(tokenIn, tokenOut) {
     try {
-      // Use a large amount to check the maximum output we can get
-      // This gives us an estimate of available liquidity
+      // Try to use real pool data if available
+      if (this.poolDataProvider) {
+        const reserves = await this.poolDataProvider.getPoolReserves(
+          'sushiswap',
+          tokenIn,
+          tokenOut,
+          this.factoryAddress
+        );
+        
+        if (reserves) {
+          logger.debug('Got real liquidity from pool data', {
+            tokenIn,
+            tokenOut,
+            reserveB: reserves.reserveB.toString()
+          });
+          return reserves.reserveB;
+        }
+      }
+      
+      // Fallback to router-based estimation
       const testAmount = ethers.utils.parseUnits('1000000', 18);
       const path = [tokenIn, tokenOut];
       
       const amounts = await this.router.getAmountsOut(testAmount, path);
       const outputAmount = amounts[amounts.length - 1];
       
-      // Return the output amount as a proxy for liquidity
-      // In production, would query the pair reserves directly
       return outputAmount;
     } catch (error) {
       logger.warn('SushiSwap getLiquidity failed', { error: error.message });

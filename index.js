@@ -6,6 +6,8 @@ const DexInterface = require('./src/dex/DexInterface');
 const PriceOracle = require('./src/oracle/PriceOracle');
 const QuickSwapDex = require('./src/dex/QuickSwapDex');
 const SushiSwapDex = require('./src/dex/SushiSwapDex');
+const PoolDataProvider = require('./src/utils/PoolDataProvider');
+const EmergencyStop = require('./src/utils/EmergencyStop');
 const config = require('./config');
 const logger = require('./src/utils/logger');
 const fs = require('fs');
@@ -15,6 +17,7 @@ async function main() {
   logger.info('='.repeat(70));
   logger.info('SHANGO POLY - Polygon Arbitrage Bot');
   logger.info('Backward Data Flow Architecture: EXECUTION -> DATA FETCH');
+  logger.info(`Network: ${config.network.isTestnet ? 'TESTNET (Mumbai)' : 'MAINNET'}`);
   logger.info('='.repeat(70));
 
   // Create logs directory if it doesn't exist
@@ -28,6 +31,13 @@ async function main() {
     process.exit(1);
   }
 
+  // Initialize emergency stop
+  const emergencyStop = new EmergencyStop(config.production);
+  
+  // Declare these in outer scope for cleanup
+  let bot = null;
+  let poolDataProvider = null;
+  
   try {
     // Initialize provider
     logger.info('Connecting to Polygon network...');
@@ -43,18 +53,35 @@ async function main() {
     const network = await Promise.race([connectionPromise, timeoutPromise]);
     logger.info(`Connected to network: ${network.name} (Chain ID: ${network.chainId})`);
 
-    // Verify we're on Polygon mainnet
-    if (network.chainId !== 137) {
-      logger.warn(`⚠️  Not connected to Polygon mainnet (chainId: ${network.chainId})`);
+    // Verify we're on the correct network
+    const expectedChainId = config.network.isTestnet ? 80001 : 137;
+    if (network.chainId !== expectedChainId) {
+      logger.warn(`⚠️  Connected to unexpected network (chainId: ${network.chainId}, expected: ${expectedChainId})`);
+    }
+
+    // Initialize Pool Data Provider for real-time data
+    if (config.trading.useRealData) {
+      logger.info('Initializing real-time pool data provider...');
+      poolDataProvider = new PoolDataProvider(provider, {
+        useWebSocket: config.trading.useWebSocket,
+        poolUpdateIntervalMs: config.trading.poolUpdateIntervalMs
+      });
+      
+      // Initialize WebSocket if configured
+      if (config.network.wsUrl && config.trading.useWebSocket) {
+        await poolDataProvider.initializeWebSocket(config.network.wsUrl);
+      }
+      
+      logger.info('✅ Pool data provider initialized');
     }
 
     // Initialize Layer 3: ROUTING - DexInterface
     logger.info('Initializing DEX Interface (Layer 3: ROUTING)...');
     const dexInterface = new DexInterface();
     
-    // Register DEXes
-    const quickswap = new QuickSwapDex(provider, config.dexes.quickswap);
-    const sushiswap = new SushiSwapDex(provider, config.dexes.sushiswap);
+    // Register DEXes with pool data provider
+    const quickswap = new QuickSwapDex(provider, config.dexes.quickswap, poolDataProvider);
+    const sushiswap = new SushiSwapDex(provider, config.dexes.sushiswap, poolDataProvider);
     
     dexInterface.registerDex('quickswap', quickswap);
     dexInterface.registerDex('sushiswap', sushiswap);
@@ -119,12 +146,17 @@ async function main() {
     }
 
     logger.info('Configuration:');
+    logger.info(`  Network: ${config.network.isTestnet ? 'Testnet (Mumbai)' : 'Mainnet'}`);
     logger.info(`  Min Profit: ${config.trading.minProfitBps / 100}%`);
     logger.info(`  Max Gas Price: ${config.trading.maxGasPriceGwei} Gwei`);
     logger.info(`  Scan Interval: ${config.trading.scanIntervalMs}ms`);
+    logger.info(`  Real Data: ${config.trading.useRealData ? 'ENABLED' : 'DISABLED'}`);
+    logger.info(`  WebSocket: ${config.trading.useWebSocket ? 'ENABLED' : 'DISABLED'}`);
     logger.info(`  Base Tokens: ${config.trading.baseTokens.length}`);
     logger.info(`  Intermediate Tokens: ${config.trading.intermediateTokens.length}`);
     logger.info(`  Registered DEXes: ${dexInterface.getRegisteredDexes().join(', ')}`);
+    logger.info(`  Emergency Stop: ${config.production.enableEmergencyStop ? 'ENABLED' : 'DISABLED'}`);
+    logger.info(`  Conservative Mode: ${config.production.conservativeMode ? 'ENABLED' : 'DISABLED'}`);
     logger.info('');
 
     // Note about contract deployment
@@ -134,6 +166,25 @@ async function main() {
       logger.info('');
       logger.info('Running in SIMULATION MODE - will scan for opportunities but not execute');
     }
+
+    // Show testnet warning
+    if (config.network.isTestnet) {
+      logger.warn('');
+      logger.warn('⚠️  RUNNING ON TESTNET (Mumbai) ⚠️');
+      logger.warn('⚠️  For production, set NETWORK=mainnet in .env');
+      logger.warn('');
+    }
+
+    // Register emergency stop handler
+    emergencyStop.onStop(async (reason, metadata) => {
+      logger.error('Emergency stop triggered, halting bot', { reason, metadata });
+      await bot.stop();
+      
+      // Cleanup resources
+      if (poolDataProvider) {
+        await poolDataProvider.cleanup();
+      }
+    });
 
     logger.info('='.repeat(70));
     logger.info('Bot is ready! Starting opportunity scanner...');
@@ -165,17 +216,29 @@ async function main() {
 }
 
 // Handle graceful shutdown
-process.on('SIGINT', () => {
+let isShuttingDown = false;
+const shutdown = async (signal) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  
   logger.info('');
-  logger.info('Shutting down gracefully...');
+  logger.info(`Received ${signal}, shutting down gracefully...`);
+  
+  // Stop the bot if running
+  if (bot && bot.isRunning) {
+    await bot.stop();
+  }
+  
+  // Cleanup pool data provider
+  if (poolDataProvider) {
+    await poolDataProvider.cleanup();
+  }
+  
   process.exit(0);
-});
+};
 
-process.on('SIGTERM', () => {
-  logger.info('');
-  logger.info('Shutting down gracefully...');
-  process.exit(0);
-});
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 // Start the bot
 main().catch(error => {

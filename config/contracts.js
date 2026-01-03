@@ -1,15 +1,24 @@
 // Smart contract addresses on Polygon
+const isTestnet = process.env.NETWORK === 'testnet';
+
 module.exports = {
   // Aave V3 addresses
   aave: {
-    poolAddressProvider: '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb',
-    pool: '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+    // Mainnet
+    poolAddressProvider: isTestnet 
+      ? '0x5343b5bA672Ae99d627A1C87866b8E53F47Db2E6' // Mumbai testnet
+      : '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb', // Mainnet
+    pool: isTestnet
+      ? '0x6C9fB0D5bD9429eb9Cd96B85B81d872281771E6B' // Mumbai testnet
+      : '0x794a61358D6845594F94dc1DB02A252b5b4814aD', // Mainnet
     flashLoanFee: 9 // 0.09% in basis points
   },
 
   // Our deployed flash loan arbitrage contract
   flashLoanArbitrage: {
-    address: process.env.CONTRACT_ADDRESS || '',
+    address: isTestnet
+      ? (process.env.CONTRACT_ADDRESS_TESTNET || '')
+      : (process.env.CONTRACT_ADDRESS || ''),
     deploymentBlock: 0
   },
 
