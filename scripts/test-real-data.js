@@ -84,17 +84,19 @@ async function testRealDataPipeline() {
     logger.info('');
     logger.info('Test 4: Get Pair Address from QuickSwap Factory');
     try {
-      // Use WMATIC and USDC as test tokens (common pair)
-      const WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270'; // Polygon Mainnet
-      const USDC = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'; // Polygon Mainnet
+      // Use common tokens from config (work on both mainnet and testnet if pools exist)
+      const tokens = require('../config/tokens');
+      const WMATIC = tokens.baseTokens[3]; // WMATIC
+      const USDC = tokens.baseTokens[0];   // USDC
       const quickswapFactory = config.dexes.quickswap.factory;
 
+      logger.info(`  Testing with WMATIC/USDC pair`);
       const pairAddress = await poolDataProvider.getPairAddress(quickswapFactory, WMATIC, USDC);
       const hasPair = pairAddress && pairAddress !== '0x0000000000000000000000000000000000000000';
       recordTest(
         'Get pair address from factory',
         hasPair,
-        hasPair ? '' : 'No pair found'
+        hasPair ? '' : 'No pair found (may not exist on testnet)'
       );
       if (hasPair) {
         logger.info(`  Pair address: ${pairAddress}`);
@@ -107,8 +109,9 @@ async function testRealDataPipeline() {
     logger.info('');
     logger.info('Test 5: Get Real Pool Reserves from QuickSwap');
     try {
-      const WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
-      const USDC = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+      const tokens = require('../config/tokens');
+      const WMATIC = tokens.baseTokens[3]; // WMATIC
+      const USDC = tokens.baseTokens[0];   // USDC
       const quickswapFactory = config.dexes.quickswap.factory;
 
       const reserves = await poolDataProvider.getPoolReserves('quickswap', WMATIC, USDC, quickswapFactory);

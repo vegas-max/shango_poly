@@ -128,10 +128,17 @@ class UniswapV3Dex {
    * @param {BigNumber} amountIn - Input amount
    * @param {BigNumber} amountOut - Output amount
    * @returns {number} Price impact in basis points
+   * 
+   * NOTE: This is a placeholder implementation.
+   * TODO: Implement proper price impact calculation using pool sqrt price and liquidity
    */
   calculatePriceImpact(amountIn, amountOut) {
-    // Simplified price impact calculation
-    // In production, this would use pool reserves and sqrt price
+    // Placeholder - proper implementation would use:
+    // - Current pool sqrt price
+    // - Pool liquidity
+    // - Calculate price after swap
+    // - Return difference as percentage
+    logger.debug('Using placeholder price impact calculation');
     return 100; // 1% placeholder
   }
 
@@ -205,8 +212,14 @@ class UniswapV3Dex {
       
       return 1.0; // Default 1% if calculation fails
     } catch (error) {
-      logger.warn('UniswapV3 getPriceImpact failed', { error: error.message });
-      return 1.0; // Default 1% on error
+      logger.warn('UniswapV3 getPriceImpact failed - using conservative default', { 
+        tokenIn,
+        tokenOut,
+        amount: amount.toString(),
+        error: error.message 
+      });
+      // Return conservative 5% estimate on error to avoid underestimating risk
+      return 5.0;
     }
   }
   

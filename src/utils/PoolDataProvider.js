@@ -192,6 +192,7 @@ class PoolDataProvider {
 
   /**
    * Get liquidity in USD for a pool (if price feeds available)
+   * NOTE: This is a placeholder. Full implementation requires price oracle integration.
    */
   async getPoolLiquidityUSD(dexName, tokenA, tokenB, factoryAddress, priceOracle) {
     const reserves = await this.getPoolReserves(dexName, tokenA, tokenB, factoryAddress);
@@ -201,12 +202,13 @@ class PoolDataProvider {
 
     try {
       // This would integrate with a price oracle to convert reserves to USD
-      // For now, return the raw reserves
+      // For now, return the raw reserves with USD values set to 0
       return {
         reserveA: reserves.reserveA,
         reserveB: reserves.reserveB,
         // USD values would require price oracle integration
-        liquidityUSD: null
+        // Set to 0 instead of null for numeric consistency
+        liquidityUSD: 0
       };
     } catch (error) {
       logger.warn('Failed to calculate liquidity USD', { error: error.message });

@@ -55,9 +55,20 @@ fi
 
 echo ""
 echo "Deployment Steps:"
-echo "1. Compile the contract using Hardhat or Foundry"
-echo "2. Deploy using your preferred tool"
-echo "3. Update CONTRACT_ADDRESS in .env with the deployed address"
+echo "1. Create a deployment script (e.g., scripts/deploy.js using Hardhat)"
+echo "2. Compile the contract using Hardhat or Foundry"
+echo "3. Deploy using your preferred tool"
+echo "4. Update CONTRACT_ADDRESS in .env with the deployed address"
+echo ""
+echo "Example Hardhat deployment script (scripts/deploy.js):"
+echo '  const hre = require("hardhat");'
+echo '  async function main() {'
+echo '    const FlashLoan = await hre.ethers.getContractFactory("FlashLoanArbitrage");'
+echo '    const flashloan = await FlashLoan.deploy();'
+echo '    await flashloan.deployed();'
+echo '    console.log("FlashLoanArbitrage deployed to:", flashloan.address);'
+echo '  }'
+echo '  main().catch((error) => { console.error(error); process.exit(1); });'
 echo ""
 echo "Example using Hardhat:"
 echo "  npx hardhat run scripts/deploy.js --network polygon"
