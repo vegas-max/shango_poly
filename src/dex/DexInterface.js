@@ -4,6 +4,7 @@ const logger = require('../utils/logger');
 class DexInterface {
   constructor() {
     this.dexes = new Map();
+    this.provider = null; // Will be set when first DEX is registered
   }
 
   /**
@@ -13,6 +14,10 @@ class DexInterface {
    */
   registerDex(name, dex) {
     this.dexes.set(name, dex);
+    // Set provider from first registered DEX
+    if (!this.provider && dex.provider) {
+      this.provider = dex.provider;
+    }
     logger.info(`Registered DEX: ${name}`);
   }
 
@@ -98,6 +103,47 @@ class DexInterface {
     }
 
     return opportunities;
+  }
+
+  /**
+   * Get liquidity for a token pair on a specific DEX
+   * @param {string} dexName - Name of the DEX
+   * @param {string} tokenIn - Input token address
+   * @param {string} tokenOut - Output token address
+   * @returns {BigNumber} Available liquidity
+   */
+  async getLiquidity(dexName, tokenIn, tokenOut) {
+    const dex = this.dexes.get(dexName);
+    if (!dex) {
+      throw new Error(`DEX ${dexName} not registered`);
+    }
+
+    if (typeof dex.getLiquidity !== 'function') {
+      throw new Error(`DEX ${dexName} does not support getLiquidity`);
+    }
+
+    return await dex.getLiquidity(tokenIn, tokenOut);
+  }
+
+  /**
+   * Get price impact for a trade on a specific DEX
+   * @param {string} dexName - Name of the DEX
+   * @param {string} tokenIn - Input token address
+   * @param {string} tokenOut - Output token address
+   * @param {BigNumber} amount - Trade amount
+   * @returns {number} Price impact percentage
+   */
+  async getPriceImpact(dexName, tokenIn, tokenOut, amount) {
+    const dex = this.dexes.get(dexName);
+    if (!dex) {
+      throw new Error(`DEX ${dexName} not registered`);
+    }
+
+    if (typeof dex.getPriceImpact !== 'function') {
+      throw new Error(`DEX ${dexName} does not support getPriceImpact`);
+    }
+
+    return await dex.getPriceImpact(tokenIn, tokenOut, amount);
   }
 
   /**
