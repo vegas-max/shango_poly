@@ -9,6 +9,7 @@
     "test": "node scripts/test-comprehensive.js",
     "test:simulation": "node scripts/test-tx-simulation.js",
     "test:validate": "node scripts/validate-system.js",
+    "test:realdata": "node scripts/test-real-data.js",
     "simulate": "node scripts/run-simulation.js",
     "compete": "node scripts/bot-competition.js",
     "build:rust": "cd rust-engine && npx napi build --platform --release",
