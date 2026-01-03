@@ -6,6 +6,7 @@ const DexInterface = require('./src/dex/DexInterface');
 const PriceOracle = require('./src/oracle/PriceOracle');
 const QuickSwapDex = require('./src/dex/QuickSwapDex');
 const SushiSwapDex = require('./src/dex/SushiSwapDex');
+const UniswapV3Dex = require('./src/dex/UniswapV3Dex');
 const PoolDataProvider = require('./src/utils/PoolDataProvider');
 const EmergencyStop = require('./src/utils/EmergencyStop');
 const config = require('./config');
@@ -82,9 +83,11 @@ async function main() {
     // Register DEXes with pool data provider
     const quickswap = new QuickSwapDex(provider, config.dexes.quickswap, poolDataProvider);
     const sushiswap = new SushiSwapDex(provider, config.dexes.sushiswap, poolDataProvider);
+    const uniswapv3 = new UniswapV3Dex(provider, config.dexes.uniswapv3, poolDataProvider);
     
     dexInterface.registerDex('quickswap', quickswap);
     dexInterface.registerDex('sushiswap', sushiswap);
+    dexInterface.registerDex('uniswapv3', uniswapv3);
 
     // Initialize Layer 2: PRICE AGGREGATION - PriceOracle
     logger.info('Initializing Price Oracle (Layer 2: PRICE AGGREGATION)...');
