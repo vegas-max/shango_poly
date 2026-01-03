@@ -122,6 +122,7 @@ class PoolDataProvider {
         pairAddress,
         tokenA,
         tokenB,
+        token0Address: token0, // Store for WebSocket updates
         reserveA,
         reserveB,
         blockTimestampLast,
@@ -169,8 +170,8 @@ class PoolDataProvider {
         // Update cache with new reserves
         const cached = this.poolCache.get(cacheKey);
         if (cached && cached.data) {
-          const token0 = cached.data.tokenA;
-          const isToken0 = true; // We already know this from initial setup
+          // Determine which reserve corresponds to which token
+          const isToken0 = cached.data.token0Address.toLowerCase() === cached.data.tokenA.toLowerCase();
           
           cached.data.reserveA = isToken0 ? reserve0 : reserve1;
           cached.data.reserveB = isToken0 ? reserve1 : reserve0;
