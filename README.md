@@ -25,17 +25,19 @@ See [HONEST_ASSESSMENT.md](HONEST_ASSESSMENT.md) for complete analysis or run `n
 
 Shango Poly now features **high-performance Rust engines** optimized for **ARM architecture**, delivering significant performance improvements:
 
-### Performance Metrics (Tested & Verified)
+### Performance Metrics (When Rust Engines Are Built)
+
+**Note**: These metrics require the Rust engines to be built (`npm run build:rust`). Without Rust engines, the system falls back to JavaScript implementation with reduced performance.
 
 | Metric | Performance | Details |
 |--------|-------------|---------|
-| **Scanner Throughput** | **140,845 ops/sec** | 3x faster opportunity scanning |
-| **Aggregator Throughput** | **294,118 ops/sec** | Ultra-fast price aggregation |
-| **Deduplicator Throughput** | **2,500,000 ops/sec** | Lightning-fast duplicate detection |
-| **Deduplication Rate** | **100%** | Perfect duplicate elimination |
-| **Price Dedupe Rate** | **90%** | Efficient price feed optimization |
+| **Scanner Throughput** | **140,845 ops/sec** | 3x faster opportunity scanning (with Rust) |
+| **Aggregator Throughput** | **294,118 ops/sec** | Ultra-fast price aggregation (with Rust) |
+| **Deduplicator Throughput** | **2,500,000 ops/sec** | Lightning-fast duplicate detection (with Rust) |
+| **Deduplication Rate** | **100%** | Perfect duplicate elimination (with Rust) |
+| **Price Dedupe Rate** | **90%** | Efficient price feed optimization (with Rust) |
 | **Cache Reduction** | **75%** | Lightweight mode cache optimization |
-| **Test Success Rate** | **89.5%** | 17/19 comprehensive tests passed |
+| **Test Success Rate** | **89.5%** | 17/19 comprehensive tests passed (with Rust engines built) |
 
 ### Engine #1: TurboScanner
 - **ARM-optimized** opportunity scanner with duplicate detection
@@ -97,10 +99,11 @@ Layer 1: DATA FETCH         → OpportunityScanner + 🦀 TurboScanner (Rust)
 ## ⚡ Features
 
 ### Core Performance Features
-- **🦀 Twin Turbo Rust Engines**: ARM-optimized for 135K+ ops/sec throughput
+- **🦀 Twin Turbo Rust Engines**: ARM-optimized for 135K+ ops/sec throughput (when built)
 - **⚡ Lightweight Mode**: 75% cache reduction for resource-constrained environments
-- **🔄 Perfect Deduplication**: 100% duplicate elimination, 90% price feed optimization
+- **🔄 Perfect Deduplication**: 100% duplicate elimination, 90% price feed optimization (with Rust)
 - **🛡️ Transaction Simulation**: Pre-broadcast validation prevents wasted gas on failed transactions
+- **🤖 ML Integration (Optional)**: Machine learning models for opportunity prediction (see [docs/ML_INTEGRATION.md](docs/ML_INTEGRATION.md))
 - **Dynamic Flash Loans**: Automatically sizes flash loans based on pool TVL
 - **Multi-DEX Support**: QuickSwap, SushiSwap, UniswapV3 integration
 - **Multi-Hop Routing**: Complex arbitrage paths for maximum profit
@@ -145,13 +148,19 @@ Addresses critical issues from backtesting (38% → 55-60% success rate target):
 ## 🛠️ Quick Start
 
 ### Prerequisites
-- Node.js >= 16.0.0
-- Rust >= 1.70.0 (for twin turbo engines)
+- Node.js >= 16.0.0 (tested with v20.19.6)
+- Rust >= 1.70.0 (tested with v1.92.0) - **Required for high-performance Rust engines**
 - An Ethereum wallet with some MATIC for gas
+
+**Note**: The system will work without Rust engines using JavaScript fallback, but performance will be significantly reduced. For production deployment with full performance metrics, building the Rust engines is strongly recommended.
 
 ### Installation
 
-**IMPORTANT**: The Rust engines must be built before the bot can achieve the documented performance metrics.
+**IMPORTANT**: The Rust engines must be built to achieve the documented performance metrics (140K+ ops/sec). Without building the Rust engines, the system uses JavaScript fallback with reduced performance.
+
+**Build Status After Installation**:
+- ✅ With `npm run build:rust`: Full performance (140K+ ops/sec, 89.5% test success)
+- ⚠️ Without Rust build: Reduced performance (JavaScript fallback, ~50% test success)
 
 #### Option 1: Using NPM (Default)
 
@@ -237,6 +246,7 @@ Edit `.env` file with your settings:
 - `MIN_PROFIT_BPS`: Minimum profit in basis points (50 = 0.5%)
 - `MAX_GAS_PRICE_GWEI`: Maximum gas price to pay
 - `LIGHTWEIGHT_MODE`: Enable for 75% memory reduction and 3x speed (true/false)
+- `ENABLE_ML_PREDICTIONS`: Enable ML-based opportunity prediction (false by default, requires training - see [docs/ML_INTEGRATION.md](docs/ML_INTEGRATION.md))
 
 ## 📊 Architecture
 
@@ -309,13 +319,23 @@ shango_poly/
 npm test
 ```
 
-**Test Results:**
+**Test Results (Conditional on Rust Engine Build)**:
+
+With Rust engines built (`npm run build:rust`):
 - ✅ 17/19 tests passed (89.5% success rate)
 - ✅ Scanner throughput: 140,845 ops/sec
 - ✅ Aggregator throughput: 294,118 ops/sec
 - ✅ Deduplicator throughput: 2,500,000 ops/sec
 - ✅ 100% deduplication rate
 - ✅ 75% cache size reduction in lightweight mode
+
+Without Rust engines (JavaScript fallback):
+- ⚠️ 9/19 tests passed (47.4% success rate)
+- ⚠️ Reduced throughput metrics
+- ⚠️ Deduplication works but at lower performance
+- ✅ 75% cache size reduction still achieved
+
+**For production deployment, build the Rust engines first**: `npm run build:rust`
 
 ### System Validation (NEW!)
 ```bash
@@ -424,15 +444,17 @@ See [docs/SIMULATION.md](docs/SIMULATION.md) for complete guide.
 
 The system includes two high-performance Rust engines optimized for ARM architecture with verified performance metrics.
 
-### ⚡ Verified Performance
+### ⚡ Verified Performance (With Built Engines)
 
-Based on comprehensive testing:
+Based on comprehensive testing with Rust engines built:
 
 | Component | Throughput | Improvement |
 |-----------|------------|-------------|
 | **TurboScanner** | 140,845 ops/sec | 3x faster scanning |
 | **TurboAggregator** | 294,118 ops/sec | Ultra-fast aggregation |
 | **Deduplicator** | 2,500,000 ops/sec | Lightning-fast dedup |
+
+**Note**: Build engines with `npm run build:rust` to achieve these metrics. Without Rust engines, the system uses JavaScript fallback with reduced performance.
 
 ### Engine #1: TurboScanner
 - **140,845 ops/sec** opportunity scanning (measured)
@@ -480,7 +502,7 @@ See [rust-engine/README.md](rust-engine/README.md) for implementation details.
 - Ideal for ARM devices, edge computing, or resource-constrained environments
 - Aggressive cache management for memory efficiency
 
-**Performance Comparison (Verified):**
+**Performance Comparison (With Rust Engines Built):**
 
 | Metric | Normal | Lightweight | Improvement |
 |--------|---------|-------------|-------------|
@@ -491,6 +513,8 @@ See [rust-engine/README.md](rust-engine/README.md) for implementation details.
 | Dedup Rate | 100% | 100% | Perfect |
 | Price Dedup | 90% | 90% | Excellent |
 
+**Note**: These metrics require Rust engines to be built. Both modes deliver exceptional performance when Rust is available.
+
 Both modes deliver exceptional performance. Choose lightweight mode for:
 - ARM-based devices (Raspberry Pi, etc.)
 - Edge computing environments
@@ -498,6 +522,32 @@ Both modes deliver exceptional performance. Choose lightweight mode for:
 - Cost-optimized cloud instances
 
 See [docs/PRODUCTION_OPERATIONS.md](docs/PRODUCTION_OPERATIONS.md) for the complete end-to-end production flow diagram.
+
+## 🔧 Troubleshooting
+
+### Rust Engines Not Available
+
+If you see warnings about Rust engines not being available:
+
+```
+warn: Rust engines not available, falling back to JavaScript implementation
+warn: Reason: Cannot find module '@shango-poly/rust-engine-linux-x64-gnu'
+```
+
+**Solution**:
+1. Ensure Rust is installed: `cargo --version`
+2. Build the Rust engines: `npm run build:rust`
+3. Restart the application
+
+**Impact if not built**:
+- System uses JavaScript fallback (still functional)
+- Reduced performance (9/19 tests pass vs 17/19 with Rust)
+- Lower throughput metrics
+- Production deployment should have Rust engines built
+
+### Other Issues
+
+For additional troubleshooting, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ## ⚠️ Disclaimer
 
