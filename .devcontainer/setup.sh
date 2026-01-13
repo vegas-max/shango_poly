@@ -16,7 +16,11 @@ if command -v cargo &> /dev/null; then
     echo "✅ Rust engines built successfully"
 else
     echo "⚠️ Rust not found. The Rust feature should be installed automatically."
-    echo "   If you see this message, there might be an issue with the devcontainer setup."
+    echo "   Troubleshooting steps:"
+    echo "   1. Try rebuilding the container: Command Palette → 'Dev Containers: Rebuild Container'"
+    echo "   2. Check .devcontainer/devcontainer.json for Rust feature configuration"
+    echo "   3. Verify the container build logs for any errors"
+    echo "   Without Rust, the system will use JavaScript fallback with reduced performance."
 fi
 echo
 
