@@ -147,14 +147,38 @@ Addresses critical issues from backtesting (38% → 55-60% success rate target):
 
 ## 🛠️ Quick Start
 
-### Prerequisites
+### 🚀 Option 0: GitHub Codespaces (Recommended for Quick Start)
+
+**Instant Setup - No Local Installation Required!**
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/vegas-max/shango_poly)
+
+Get started in seconds with zero local setup:
+
+✨ **Instant Setup** - No Node.js, Rust, or dependencies to install  
+🔄 **Consistent Environment** - Same setup for all developers  
+🧪 **CI/CD Testing** - Run workflows and tests before pushing  
+🚀 **Easy Onboarding** - New contributors start coding immediately  
+💰 **Free Tier** - 60 hours/month included with GitHub account
+
+**How to use:**
+1. Click the badge above or go to the repository → **Code** → **Codespaces** → **Create codespace**
+2. Wait 2-3 minutes for the environment to build (automatic)
+3. Edit `.env` file with your configuration
+4. Start coding! All dependencies and Rust engines are pre-built
+
+See [.devcontainer/README.md](.devcontainer/README.md) for more details on the development container setup.
+
+---
+
+### Prerequisites (For Local Installation)
 - Node.js >= 16.0.0 (tested with v20.19.6)
 - Rust >= 1.70.0 (tested with v1.92.0) - **Required for high-performance Rust engines**
 - An Ethereum wallet with some MATIC for gas
 
 **Note**: The system will work without Rust engines using JavaScript fallback, but performance will be significantly reduced. For production deployment with full performance metrics, building the Rust engines is strongly recommended.
 
-### Installation
+### Local Installation
 
 **IMPORTANT**: The Rust engines must be built to achieve the documented performance metrics (140K+ ops/sec). Without building the Rust engines, the system uses JavaScript fallback with reduced performance.
 
